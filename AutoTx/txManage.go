@@ -49,7 +49,6 @@ func NewTxManager(pool *Tx.Pool) *TxManager {
 func (tm *TxManager) MsgSendingControl() {
 	txFile, err := os.Open(config.FileInput)
 	if err != nil {
-
 		log.Panic(err)
 	}
 	defer txFile.Close()

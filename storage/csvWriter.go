@@ -100,7 +100,6 @@ func (cw *CsvWriter) Run() *CsvWriter {
 func Merge() error {
 	i := 0
 	outputFile := config.OutputPath + "Spiral-Result" + time.Now().Format("15:04:05") + ".csv"
-
 	// 创建或打开最终输出文件
 	f, err := os.OpenFile(outputFile, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
@@ -165,6 +164,7 @@ func Merge() error {
 
 func MergeCsv() {
 	var allRecords [][]string
+	_ = Merge()
 	// 搜索并读取所有的 out_x.csv 文件
 	for i := 0; ; i++ {
 		fileName := fmt.Sprintf(config.OutputPath+"out_%d.csv", i)
@@ -245,5 +245,4 @@ func MergeCsv() {
 
 		fmt.Printf("已删除文件 %s\n", fileName)
 	}
-	_ = Merge()
 }

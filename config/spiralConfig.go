@@ -2,7 +2,7 @@ package config
 
 var (
 	SpiConf           *SpiralConfig
-	SpiralShardAmount = 8
+	SpiralShardAmount = 1
 )
 
 const ClassRelay = false

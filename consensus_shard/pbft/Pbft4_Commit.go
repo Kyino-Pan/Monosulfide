@@ -86,8 +86,8 @@ func (con *ConPbft) HandleCommitMsgs() {
 			con.isReply[seq] = true
 			//replyMsg := con.NewReplyMessage(seq, true) // must be called before Execute, to support mainNode changing
 			{
-				//log.Printf(
-				//	"\t\tRound %d (%v)executing......\n", con.seq(), con.proposalPool[seq].RequestType)
+				log.Printf(
+					"\t\tRound %d (%v)executing......\n", con.seq(), con.proposalPool[seq].RequestType)
 				storage.CommLogger.Writef("Round %d (%v)executing\n", con.seq(), con.proposalPool[seq].RequestType)
 				RequestToExecute := con.proposalPool[seq]
 				con.Execute(RequestToExecute)
@@ -98,8 +98,7 @@ func (con *ConPbft) HandleCommitMsgs() {
 				con.nxtSeq()
 				go launch.ClearMsgBuffer()
 				con.Tic()
-				log.Printf(
-					"\t\tRound %d (%v) finish. \n", con.seq(), con.proposalPool[seq].RequestType)
+				log.Printf("\t S%vRound %d (%v) finish. \n", idChain.RunningNode.ShardID, con.seq(), con.proposalPool[seq].RequestType)
 			}
 			if idChain.RunningNode != con.GetDomain().Main() {
 				if msg := con.PrePreMsgs[con.seq()]; msg != nil {

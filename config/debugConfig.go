@@ -3,12 +3,14 @@ package config
 import "time"
 
 const (
-	Debugging        = true
+	Debugging        = false
 	DebugNodeAtShard = 0
 	DebugIsMainNode  = false
 	TPS_TEST         = false
 )
 
-var TxBegin time.Time
-
-// 4个shard，S1>S2>S
+var (
+	CalcComm = false
+	TxBegin  time.Time
+	CommCalc = 0.0 //KB
+)
