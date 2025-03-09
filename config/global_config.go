@@ -1,0 +1,50 @@
+package config
+
+import "time"
+
+const (
+	InjectSpeed   = 2048  // the transaction inject speed（per message)
+	TotalDataSize = 10000 // the total number of txs
+	BlockSize     = 2048
+	BatchSize     = 16000 // supervisor read a batch of txs then send them, it should be larger than inject speed
+
+	NDelay           = time.Duration(100)                       // ms
+	EpochTime        = time.Duration(300000) * time.Millisecond // ms
+	InitDelay        = time.Duration(4) * time.Second           // s
+	TxInjectInterval = 240 * time.Millisecond
+	ExitDelay        = time.Duration(8)
+
+	ViewChangeTime   = 80000                                      //ms
+	FileInput        = `../2000000to2999999_BlockTransaction.csv` //the raw BlockTransaction data path
+	Localhost        = "127.0.0.1"
+	OutputPath       = "./output/"
+	DnsAddr          = "127.0.0.1"
+	ListenPort       = "20000"
+	MonitorAddr      = Localhost + ":" + ListenPort
+	IdRunningAddr    = "IdRunningAddr"      // message will be delivered to every non-sleeping nodes.
+	IdLegalAddr      = "IdLegalAddr"        // message will be delivered to EVERY node.
+	PyrRunningAddr   = "pyramidRunningAddr" //
+	SpiRunningAddr   = "spiRunningAddr"     //
+	PyramidMainAddr  = "PyramidMainAddr"    //
+	PyramidRelateI   = "PyramidRelateI"     // related shards mainNodes
+	PrivateKeyPEM    = "./privateKeyPEM.txt"
+	PublicKeyPEM     = "./publicKeyPEM.txt"
+	ShardPrefix      = "ShardPrefix"
+	MsgSplitter      = byte('~')
+	ViewTrigger      = "VIEW_TRIGGER"
+	SleepMin         = 64
+	PrefixMsgTypeLen = 40
+	IdMod            = 0
+	PyrMod           = 1
+	SpiMod           = 2
+	RelayMod         = 3
+	EoFDelay         = 16 * time.Second
+	RealRand         = false
+)
+
+var (
+	SuccessByte     = []byte("successByte")
+	FailByte        = []byte("failByte")
+	ManagerFinished = false
+	STOPPER         = make(chan bool, 1)
+)
