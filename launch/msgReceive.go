@@ -1,6 +1,7 @@
 package launch
 
 import (
+	"blockEmulator/Spiral"
 	"blockEmulator/config"
 	"blockEmulator/message"
 	"blockEmulator/networks"
@@ -69,7 +70,7 @@ func TcpListen() {
 				storage.MergeCsv() //merge previous work
 			}
 			storage.Init(cnt)
-			go storage.CommLogger.Run()
+			//go storage.CommLogger.Run()
 			break
 		}
 	}
@@ -104,6 +105,12 @@ func handleRequest(conn *networks.TcpConn) {
 		if err != nil {
 			if err == io.EOF {
 				log.Println("handler::client closed")
+				if config.SpiConf.Enable {
+					Spiral.LocalShard.Chain.Save()
+					config.STOPPER <- true
+					//todo
+					// this is not safe, just a temporary method.
+				}
 				return
 			}
 			log.Panicf("failed to read message length: %v", err)
@@ -125,6 +132,10 @@ func handleRequest(conn *networks.TcpConn) {
 		if err != nil {
 			if err == io.EOF {
 				log.Printf("handler::client closed")
+				if config.SpiConf.Enable {
+					Spiral.LocalShard.Chain.Save()
+					config.STOPPER <- true
+				}
 				return
 			}
 			log.Panicf("failed to read message content: %v", err)

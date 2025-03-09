@@ -4,15 +4,15 @@ import "time"
 
 const (
 	InjectSpeed   = 2048  // the transaction inject speed（per message)
-	TotalDataSize = 10000 // the total number of txs
+	TotalDataSize = 80000 // the total number of txs
 	BlockSize     = 2048
 	BatchSize     = 16000 // supervisor read a batch of txs then send them, it should be larger than inject speed
 
 	NDelay           = time.Duration(100)                       // ms
 	EpochTime        = time.Duration(300000) * time.Millisecond // ms
 	InitDelay        = time.Duration(4) * time.Second           // s
-	TxInjectInterval = 240 * time.Millisecond
-	ExitDelay        = time.Duration(8)
+	TxInjectInterval = 50 * time.Millisecond
+	ExitDelay        = time.Duration(3) * time.Second
 
 	ViewChangeTime   = 80000                                      //ms
 	FileInput        = `../2000000to2999999_BlockTransaction.csv` //the raw BlockTransaction data path

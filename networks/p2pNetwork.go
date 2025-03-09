@@ -110,6 +110,10 @@ func (tc *TcpConn) SendMsg(msgType message.MessageType, content []byte) error {
 	if err != nil {
 		return err
 	}
+
+	if config.CalcComm {
+		config.CommCalc += float64(len(msg)) / 1024.0
+	}
 	return nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"blockEmulator/AutoTx"
 	"blockEmulator/Comm"
 	"blockEmulator/Interfaces"
+	"blockEmulator/Spiral"
 	"blockEmulator/Tx"
 	"blockEmulator/config"
 	"blockEmulator/consensus_shard/pbft"
@@ -39,11 +40,11 @@ func Selector() {
 			}
 			msgType := msg.Type
 			if msgType == Comm.Register.ResponseType() {
-				// Uninitialized nodes will running this brunch
+				// Uninitialized nodes will run at this brunch
 				Interfaces.Communications[Comm.Register].HandleResponse(msg)
 				state++ // todo
 				// this is a bug. But convenient.
-				//Con.Communications[IdInit].Request()
+				// Con.Communications[IdInit].Request()
 				log.Printf("--->>>Decode time cost:%v", time.Since(timeStamp))
 				launch.ClearMsgBuffer()
 				continue
@@ -67,7 +68,12 @@ func Selector() {
 					if config.SpiConf.Enable {
 						config.ManagerFinished = true
 						fmt.Println("_________TX-FINISH_________")
+						if idChain.RunningNode == Spiral.LocalShard.Main() {
+							Interfaces.Communications[Interfaces.MainBegin].Request()
+						}
 						success = true
+					} else {
+						log.Panic("ENABLE BEGIN")
 					}
 				} else {
 					success = Con.HandleMsg(msg)

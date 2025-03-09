@@ -209,16 +209,6 @@ func RefreshSpiralShard() {
 	)
 
 	AutoTx.Manager = AutoTx.NewTxManager(Spiral.LocalShard.Chain.TxPool)
-	if idChain.RunningNode == Spiral.LocalShard.Main() {
-		// log record
-		storage.StateLogger.ResetRow(int(currShardId))
-		go storage.StateLogger.Run()
-		storage.StateLogger.Writef("%v", idChain.RunningNode.IpAddr)
-
-		Interfaces.Con[config.SpiMod].EnablePropose()
-		go Interfaces.Operations[message.SpiralTx].Propose()
-		config.TxBegin = time.Now()
-	}
 }
 
 func RefreshShard() {

@@ -126,7 +126,6 @@ func (sc *SpiChain) Append(block *Block.SpiralBlock) {
 					config.SpiConf.ShardAmount-len(finishCount))
 				need = false
 				finishCount[sc.Id()] = true
-				time.Sleep(5 * time.Second)
 				if len(finishCount) == config.SpiConf.ShardAmount || config.TPS_TEST {
 					if LocalShard.Main() == idChain.RunningNode {
 						Interfaces.Communications[Interfaces.SyncSpiBlock].Request()
@@ -190,7 +189,7 @@ func (sc *SpiChain) Append(block *Block.SpiralBlock) {
 			need := true
 			if block.H.StateRoot != nil {
 				need = false
-				//log.Printf("shard%v %v", blockMaker, string(block.H.StateRoot))
+				log.Printf("shard%v %v", blockMaker, string(block.H.StateRoot))
 				finishCount[blockMaker] = true
 				if len(finishCount) == config.SpiConf.ShardAmount || config.TPS_TEST {
 					if LocalShard.Main() == idChain.RunningNode {
@@ -388,10 +387,23 @@ func (sc *SpiChain) EncodedExp() *[]byte {
 	return &bs
 }
 
+var saved = false
+var lock sync.Mutex
+
 func (sc *SpiChain) Save() {
+	lock.Lock()
+	defer lock.Unlock()
+	if idChain.RunningNode != LocalShard.mainNode {
+		return
+	}
+	if saved {
+		return
+	}
+	saved = true
 	conTime := time.Since(config.TxBegin)
 	writer := storage.NewCsvWriter(0, "Spiral-Result-"+strconv.Itoa(sc.Id())+".csv")
 	go writer.Run()
+	log.Printf("S%v %v", idChain.RunningNode.ShardID, idChain.RunningNode.IpAddr)
 	log.Print(sc.exp)
 	numI := sc.exp.IntraTxAmount
 	numC := sc.exp.CTxAmount
@@ -399,17 +411,18 @@ func (sc *SpiChain) Save() {
 	sumC := sc.exp.CTxDelaySum
 	writer.Writef(strconv.Itoa(numI))
 	writer.Writef(strconv.Itoa(numC))
+	writer.Writef(strconv.Itoa(sc.exp.GenAmount))
 	writer.Writef(sumI.String())
 	writer.Writef(sumC.String())
 	writer.Writef("%d", (sumI / time.Duration(numI)).Milliseconds())
 	writer.Writef("%d", (sumC / time.Duration(numC+1)).Milliseconds())
-	writer.Writef("%d", ((sumC + sumI) / time.Duration(numC+numI)).Milliseconds())
-	writer.Writef("%v", float64(numC+numI)/conTime.Seconds())
-	writer.Writef(strconv.Itoa(sc.exp.GenAmount))
+	writer.Writef("%d", ((sumC + sumI) / time.Duration(numC+numI)).Milliseconds()) // average TCL
+	writer.Writef("%v", float64(numC+numI)/conTime.Seconds())                      // TPS
+	writer.Writef("%.2f", config.CommCalc)                                         // KB
 	writer.Writef(strconv.Itoa(config.TotalDataSize) + "Txs")
 	writer.Writef("S" + strconv.Itoa(config.SpiralShardAmount) + "N" + strconv.Itoa(len(idChain.IDC.NodeMap)))
-
-	time.Sleep(config.ExitDelay * time.Second)
+	Interfaces.Communications[Interfaces.SyncSpiBlock].Request()
+	time.Sleep(config.ExitDelay)
 	return
 }
 
