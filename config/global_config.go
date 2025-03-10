@@ -8,7 +8,7 @@ const (
 	BlockSize     = 2048
 	BatchSize     = 16000 // supervisor read a batch of txs then send them, it should be larger than inject speed
 
-	EpochTime        = time.Duration(300000) * time.Millisecond // ms
+	EpochTime        = time.Duration(999999) * time.Millisecond // ms
 	InitDelay        = time.Duration(4) * time.Second           // s
 	TxInjectInterval = 50 * time.Millisecond
 	ExitDelay        = time.Duration(3) * time.Second
