@@ -51,6 +51,7 @@ func (nl *NetListener) unlock() {
 
 func TcpListen() {
 	port, _ := strconv.Atoi(config.ListenPort)
+	config.InitNetDelay()
 	cnt := 0
 	for {
 		ln, err := net.Listen("tcp", config.Localhost+":"+strconv.Itoa(port))
@@ -149,6 +150,6 @@ func handleRequest(conn *networks.TcpConn) {
 }
 
 func _delaySending(m *message.Message) {
-	time.Sleep(config.NDelay * time.Millisecond)
+	time.Sleep(config.NDelay)
 	BCMsgPool <- m
 }

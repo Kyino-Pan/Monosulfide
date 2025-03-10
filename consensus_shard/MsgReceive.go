@@ -68,6 +68,9 @@ func Selector() {
 					if config.SpiConf.Enable {
 						config.ManagerFinished = true
 						fmt.Println("_________TX-FINISH_________")
+						if config.EnableDT {
+							config.NDelay = config.DT[int(idChain.RunningNode.ShardID)]
+						}
 						if idChain.RunningNode == Spiral.LocalShard.Main() {
 							Interfaces.Communications[Interfaces.MainBegin].Request()
 						}

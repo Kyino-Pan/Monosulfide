@@ -35,6 +35,7 @@ func (com *MainBeginCom) Request(...*[]byte) bool {
 }
 
 func (com *MainBeginCom) HandleRequest(*message.Message) bool {
+	// only main node reach here
 	com.lock.Lock()
 	defer com.lock.Unlock()
 	com.cnt++

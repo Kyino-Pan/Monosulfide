@@ -179,11 +179,6 @@ func (con *ConPbft) SyncResponse(msg *message.Message) {
 func (con *ConPbft) Execute(req *message.Request) {
 	reqType := req.RequestType
 	Interfaces.Operations[reqType].Execute()
-	if idChain.IsIdMainNode() {
-		interval := time.Since(con.ProposalTimeCtr)
-		config.Record[int(config.NDelay/100)] = interval
-		//log.Printf("---->>>>TIME ::%v", interval)
-	}
 }
 
 func (con *ConPbft) HandleNodeSilence(msg *message.Message) {

@@ -5,14 +5,12 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
-	"time"
 )
 
 var (
 	shardAmount     = 6
 	PyrConf         = InitShardConfig()
 	ActivatePyramid = false
-	Record          = make([]time.Duration, 12)
 )
 
 type PyramidConfig struct {
