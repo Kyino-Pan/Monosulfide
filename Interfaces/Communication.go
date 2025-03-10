@@ -26,7 +26,8 @@ const (
 	Finish       CommType = "Finish"
 	MigratePro   CommType = "MigratePro" // migrate proposal buffer
 	ViewChange   CommType = "ViewChange"
-	MainBegin             = "MainBegin"
+	MainBegin    CommType = "MainBegin"
+	Ping         CommType = "ping"
 )
 
 func (ct CommType) RequestType() message.MessageType {

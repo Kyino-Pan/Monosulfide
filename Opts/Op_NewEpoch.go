@@ -208,6 +208,7 @@ func RefreshSpiralShard() {
 		Interfaces.Con[config.SpiMod].GetDomain().Threshold(),
 	)
 
+	Interfaces.Communications[Interfaces.Ping].Request() // connect to other nodes .
 	AutoTx.Manager = AutoTx.NewTxManager(Spiral.LocalShard.Chain.TxPool)
 }
 

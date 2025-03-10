@@ -28,5 +28,6 @@ func Init() {
 	if config.SpiConf.Enable {
 		Deploy(new(SyncSBlockCom))
 		Deploy(new(MainBeginCom))
+		Deploy(new(PingCom))
 	}
 }
