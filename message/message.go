@@ -17,6 +17,7 @@ const (
 	AppendCBlock  RequestType = "AppendCBlock"
 	CrossCommit   RequestType = "CrossCommit"
 	RemoveNode    RequestType = "RemoveNode" // this var is disabled now.
+	Empty         RequestType = "Empty"
 )
 
 type Message struct {

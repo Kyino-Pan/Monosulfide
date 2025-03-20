@@ -2,7 +2,6 @@ package pbft
 
 import (
 	"blockEmulator/Interfaces"
-	"blockEmulator/Opts"
 	"blockEmulator/Proposals"
 	"blockEmulator/config"
 	"blockEmulator/crypt"
@@ -221,7 +220,7 @@ func (con *ConPbft) EnableViewChange(i int) {
 			Interfaces.Communications[Interfaces.ViewChange].Request()
 			con.Tic()
 		} else if t >= interval/2 && con.GetDomain().Main() == idChain.RunningNode {
-			Opts.Propose(con, Opts.Empty)
+			Interfaces.Propose(con, message.Empty)
 			con.Tic()
 		} else if t >= interval/2 && con.GetDomain().Main().IpAddr == launch.Listener.GetLocalAddr() {
 			panic("")

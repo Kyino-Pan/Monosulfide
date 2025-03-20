@@ -2,7 +2,6 @@ package Opts
 
 import (
 	"blockEmulator/Interfaces"
-	"blockEmulator/Proposals"
 	"blockEmulator/config"
 	"blockEmulator/message"
 )
@@ -29,10 +28,5 @@ func Init() {
 }
 
 func Propose(con Interfaces.Consensus, reqType message.RequestType, vars ...*[]byte) {
-	con.GetProposalBuffer().Push(&Proposals.Proposal{
-		ReqType: reqType,
-		Vars:    vars,
-	})
-	//log.Printf("%v add to proBuffer, remaining %v", reqType, con.GetProposalBuffer().Amount())
-	go con.Propose()
+	Interfaces.Propose(con, reqType, vars...)
 }

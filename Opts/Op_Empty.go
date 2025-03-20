@@ -7,8 +7,6 @@ import (
 	"blockEmulator/message"
 )
 
-var Empty message.RequestType = "Empty"
-
 type EmptyOpt struct {
 	con   Interfaces.Consensus
 	block Block.Block
@@ -16,12 +14,12 @@ type EmptyOpt struct {
 
 func (op *EmptyOpt) Reset(con Interfaces.Consensus) message.RequestType {
 	op.con = con
-	con.GetProposalBuffer().SetPriority(Empty, Proposals.Emergency)
-	return Empty
+	con.GetProposalBuffer().SetPriority(message.Empty, Proposals.Emergency)
+	return message.Empty
 }
 
 func (op *EmptyOpt) Propose(...*[]byte) {
-	Propose(op.con, Empty)
+	Propose(op.con, message.Empty)
 	//Interfaces.Propose(op.con,Empty, newBlock.EncodeH())
 }
 func (op *EmptyOpt) PrepareAfterLock([]*[]byte) bool {
