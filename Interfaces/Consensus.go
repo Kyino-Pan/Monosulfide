@@ -8,7 +8,7 @@ import (
 
 type Consensus interface {
 	SendMsg(*message.Message)
-	Propose(message.RequestType, ...*[]byte)
+	Propose()
 	GetProposalBuffer() *Proposals.ProposalBuffer
 	GetDomain() Domain
 	SetDomain(Domain)

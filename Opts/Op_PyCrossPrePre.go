@@ -27,7 +27,7 @@ func (op *CrossPrePreOpt) Propose(...*[]byte) {
 	byteArray := new([]byte)
 	//log.Printf("Propose")
 	//log.Printf("amount::%v", pyramid.LocalShard.UnconfirmedCrossTxsLen())
-	op.con.Propose(message.CrossPrePre, byteArray)
+	Propose(op.con, message.CrossPrePre, byteArray)
 }
 func (op *CrossPrePreOpt) PrepareAfterLock(vars []*[]byte) bool {
 	shard := pyramid.LocalShard

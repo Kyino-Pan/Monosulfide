@@ -221,7 +221,7 @@ func (con *ConPbft) EnableViewChange(i int) {
 			Interfaces.Communications[Interfaces.ViewChange].Request()
 			con.Tic()
 		} else if t >= interval/2 && con.GetDomain().Main() == idChain.RunningNode {
-			con.Propose(Opts.Empty)
+			Opts.Propose(con, Opts.Empty)
 			con.Tic()
 		} else if t >= interval/2 && con.GetDomain().Main().IpAddr == launch.Listener.GetLocalAddr() {
 			panic("")

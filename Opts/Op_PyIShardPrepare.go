@@ -23,7 +23,7 @@ func (op *IShardPrepareOpt) Reset(con Interfaces.Consensus) message.RequestType 
 func (op *IShardPrepareOpt) Propose(vars ...*[]byte) {
 	// vars = [[byteBlock]]
 	op.Verify(Interfaces.TransVars(vars))
-	op.con.Propose(message.IShardPrepare, vars...)
+	Propose(op.con, message.IShardPrepare, vars...)
 	return
 }
 

@@ -17,7 +17,7 @@ type AppendCBlockOpt struct {
 }
 
 func (op *AppendCBlockOpt) Propose(vars ...*[]byte) {
-	op.con.Propose(message.AppendCBlock, vars...)
+	Propose(op.con, message.AppendCBlock, vars...)
 	return
 }
 func (op *AppendCBlockOpt) PrepareAfterLock([]*[]byte) bool {

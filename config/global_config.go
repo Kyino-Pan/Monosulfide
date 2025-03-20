@@ -3,8 +3,8 @@ package config
 import "time"
 
 const (
-	InjectSpeed   = 2048   // the transaction inject speed（per message)
-	TotalDataSize = 800000 // the total number of txs
+	InjectSpeed   = 2048  // the transaction inject speed（per message)
+	TotalDataSize = 30000 // the total number of txs
 	BlockSize     = 2048
 	BatchSize     = 16000 // supervisor read a batch of txs then send them, it should be larger than inject speed
 

@@ -21,8 +21,8 @@ func (op *EmptyOpt) Reset(con Interfaces.Consensus) message.RequestType {
 }
 
 func (op *EmptyOpt) Propose(...*[]byte) {
-	op.con.Propose(Empty)
-	//op.con.Propose(Empty, newBlock.EncodeH())
+	Propose(op.con, Empty)
+	//Interfaces.Propose(op.con,Empty, newBlock.EncodeH())
 }
 func (op *EmptyOpt) PrepareAfterLock([]*[]byte) bool {
 	return true

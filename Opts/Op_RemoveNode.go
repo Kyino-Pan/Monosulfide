@@ -19,7 +19,7 @@ func (op *RemoveNodeOpt) Reset(con Interfaces.Consensus) message.RequestType {
 }
 
 func (op *RemoveNodeOpt) Propose(vars ...*[]byte) {
-	op.con.Propose(message.RemoveNode, vars...)
+	Propose(op.con, message.RemoveNode, vars...)
 }
 func (op *RemoveNodeOpt) PrepareAfterLock([]*[]byte) bool {
 	return true

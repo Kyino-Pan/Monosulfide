@@ -33,8 +33,8 @@ func (op *NewEpochOpt) Reset(con Interfaces.Consensus) message.RequestType {
 
 func (op *NewEpochOpt) Propose(...*[]byte) {
 	EncodeIdBlock := new([]byte)
-	op.con.Propose(message.NewEpoch, EncodeIdBlock)
-	//op.con.Propose(NewEpoch, newBlock.EncodeH())
+	Propose(op.con, message.NewEpoch, EncodeIdBlock)
+	//Interfaces.Propose(op.con,NewEpoch, newBlock.EncodeH())
 }
 
 func (op *NewEpochOpt) PrepareAfterLock(vars []*[]byte) bool {

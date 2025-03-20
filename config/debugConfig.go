@@ -18,7 +18,7 @@ var (
 
 // 网络延迟配置
 var (
-	NDelay   = time.Duration(100) * time.Millisecond // ms
+	NDelay   = time.Duration(0) * time.Millisecond // ms
 	DT       = make(map[int]time.Duration)
 	EnableDT = true
 )

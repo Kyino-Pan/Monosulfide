@@ -2,7 +2,9 @@ package Opts
 
 import (
 	"blockEmulator/Interfaces"
+	"blockEmulator/Proposals"
 	"blockEmulator/config"
+	"blockEmulator/message"
 )
 
 func Deploy(op Interfaces.Operation, con Interfaces.Consensus) {
@@ -24,4 +26,13 @@ func Init() {
 
 	Fide := Interfaces.Con[config.FideMod]
 	Deploy(new(FideTxOpt), Fide)
+}
+
+func Propose(con Interfaces.Consensus, reqType message.RequestType, vars ...*[]byte) {
+	con.GetProposalBuffer().Push(&Proposals.Proposal{
+		ReqType: reqType,
+		Vars:    vars,
+	})
+	//log.Printf("%v add to proBuffer, remaining %v", reqType, con.GetProposalBuffer().Amount())
+	go con.Propose()
 }

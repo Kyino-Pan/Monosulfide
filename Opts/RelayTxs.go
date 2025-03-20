@@ -25,7 +25,7 @@ func (op *RelayTxOpt) Propose(...*[]byte) {
 	byteArray := new([]byte)
 	log.Printf("Propose")
 	//pyramid.LocalShard.WaitForRelayTxs()
-	op.con.Propose(message.RelayTx, byteArray)
+	Propose(op.con, message.RelayTx, byteArray)
 }
 
 func (op *RelayTxOpt) PrepareAfterLock(vars []*[]byte) bool {

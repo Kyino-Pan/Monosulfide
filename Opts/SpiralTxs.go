@@ -24,7 +24,7 @@ func (op *FideTxOpt) Reset(con Interfaces.Consensus) message.RequestType {
 func (op *FideTxOpt) Propose(...*[]byte) {
 	byteArray := new([]byte)
 	//pyramid.LocalShard.WaitForFideTxs()
-	op.con.Propose(message.FideTx, byteArray)
+	Propose(op.con, message.FideTx, byteArray)
 }
 
 func (op *FideTxOpt) PrepareAfterLock(vars []*[]byte) bool {

@@ -22,7 +22,7 @@ func (op *InternalTxOpt) Reset(con Interfaces.Consensus) message.RequestType {
 func (op *InternalTxOpt) Propose(...*[]byte) {
 	byteArray := new([]byte)
 	time.Sleep(1 * time.Second)
-	op.con.Propose(message.InternalTx, byteArray)
+	Propose(op.con, message.InternalTx, byteArray)
 }
 
 func (op *InternalTxOpt) PrepareAfterLock(vars []*[]byte) bool {

@@ -16,7 +16,7 @@ type CrossCommitOpt struct {
 
 func (op *CrossCommitOpt) Propose(vars ...*[]byte) {
 	// vars=[[seq]]
-	op.con.Propose(message.CrossCommit, vars...)
+	Propose(op.con, message.CrossCommit, vars...)
 }
 func (op *CrossCommitOpt) PrepareAfterLock([]*[]byte) bool {
 	return true

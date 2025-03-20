@@ -2,6 +2,7 @@ package Comm
 
 import (
 	"blockEmulator/Interfaces"
+	"blockEmulator/Opts"
 	"blockEmulator/Proposals"
 	"blockEmulator/config"
 	"blockEmulator/crypt"
@@ -85,7 +86,7 @@ func (com *MigrateProCom) HandleRequest(msg *message.Message) bool {
 		pros := com._parseMsg(msg)
 		log.Printf("Recieve migrateMsg(%v)", len(pros))
 		for _, p := range pros {
-			com.con.Propose(p.ReqType, p.Vars...)
+			Opts.Propose(com.con, p.ReqType, p.Vars...)
 		}
 		return true
 	} else {
