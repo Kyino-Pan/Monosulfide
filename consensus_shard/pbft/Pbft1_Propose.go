@@ -6,13 +6,9 @@ import (
 	"time"
 )
 
-var cnt = 0
-
 func (con *ConPbft) Propose() {
 	// critical section
 	con.DisablePropose()
-	cnt++
-	Interfaces.ClearComBuffer()
 	pro := con.GetProposalBuffer().Pop()
 	if pro == nil {
 		con.EnablePropose()

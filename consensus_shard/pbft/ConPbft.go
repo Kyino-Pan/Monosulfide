@@ -242,10 +242,3 @@ func (con *ConPbft) Tok() time.Duration {
 func (con *ConPbft) GetProposalBuffer() *Proposals.ProposalBuffer {
 	return con.proposalBuffer
 }
-
-func Init() {
-	idChain.Init(launch.Listener.GetListenPort())
-	Interfaces.Con[IdMod] = NewIdChainCon()
-	Interfaces.Con[PyrMod] = NewPyramidCon()
-	Interfaces.Con[FideMod] = NewFideBehavior()
-}

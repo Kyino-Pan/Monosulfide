@@ -5,7 +5,6 @@ import (
 	"blockEmulator/Opts"
 	"blockEmulator/config"
 	"blockEmulator/consensus_shard"
-	"blockEmulator/consensus_shard/pbft"
 	"blockEmulator/launch"
 )
 
@@ -16,7 +15,7 @@ import (
 
 func Run(mod uint64) {
 	launch.TcpListen()
-	pbft.Init()
+	consensus_shard.Init()
 	Comm.Init()
 	Opts.Init()
 	go consensus_shard.Selector() // Core logic loop

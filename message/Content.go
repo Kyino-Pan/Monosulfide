@@ -120,3 +120,7 @@ func (content *Content) CheckSign() string { // read and remove the sign from co
 	*content = *temp
 	return signature
 }
+
+func (content *Content) Bytes() *[]byte {
+	return (*[]byte)(content)
+}

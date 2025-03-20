@@ -14,4 +14,5 @@ type Domain interface {
 	GetViewId() uint64
 	SetViewId(uint64)
 	Addr() string
+	GetMap() map[string]*idChain.Node
 }

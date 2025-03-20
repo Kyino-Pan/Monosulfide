@@ -28,6 +28,7 @@ const (
 	ViewChange    CommType = "ViewChange"
 	MainBegin     CommType = "MainBegin"
 	Ping          CommType = "ping"
+	PoWBroadcast  CommType = "PoWBroadcast"
 )
 
 func (ct CommType) RequestType() message.MessageType {

@@ -17,7 +17,6 @@ func Init() {
 	Deploy(new(RegisterBroadCom))
 	Deploy(new(ViewChangeCom))
 	Deploy(new(MigrateProCom))
-
 	if config.PyrConf.Enable {
 		Deploy(new(SyncIBlockCom))
 		Deploy(new(CrossLockCom))
@@ -30,4 +29,5 @@ func Init() {
 		Deploy(new(MainBeginCom))
 		Deploy(new(PingCom))
 	}
+	Deploy(new(PoWBroadcastCom))
 }

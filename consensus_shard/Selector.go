@@ -93,3 +93,10 @@ func Selector() {
 		}
 	}
 }
+
+func Init() {
+	idChain.Init(launch.Listener.GetListenPort())
+	Interfaces.Con[config.IdMod] = pbft.NewIdChainCon()
+	Interfaces.Con[config.PyrMod] = pbft.NewPyramidCon()
+	Interfaces.Con[config.FideMod] = pbft.NewFideBehavior()
+}

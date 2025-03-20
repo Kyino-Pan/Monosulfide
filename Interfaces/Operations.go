@@ -36,5 +36,6 @@ func Propose(con Consensus, reqType message.RequestType, vars ...*[]byte) {
 		Vars:    vars,
 	})
 	//log.Printf("%v add to proBuffer, remaining %v", reqType, con.GetProposalBuffer().Amount())
+	ClearComBuffer()
 	go con.Propose()
 }

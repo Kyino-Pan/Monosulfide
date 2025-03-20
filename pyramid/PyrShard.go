@@ -24,6 +24,10 @@ type PyrShard struct {
 	tempBlock     Block.Block
 }
 
+func (sh *PyrShard) GetMap() map[string]*idChain.Node {
+	return sh.NodeMap
+}
+
 func (sh *PyrShard) GetBlock(bHash []byte) ([]byte, error) {
 	return sh.Chain.storage.GetBlock(bHash)
 }

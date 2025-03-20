@@ -42,13 +42,10 @@ const (
 	CPrepare    MessageType = "BC_prepare"
 	CCommit     MessageType = "BC_commit"
 	CReply      MessageType = "BC_reply"
+	CRelay      MessageType = "relay"
 
-	//CRelay  MessageType = "relay"
 	PyrPrefix string = "PY"
-	BCPrefix  string = "BC"
 
-	PyrDefault = MessageType(PyrPrefix + "Default")
-	//BCDefault  = MessageType(BCPrefix + "Default")
 	SyncIdChain MessageType = "SyncShard"
 	NodeSilence MessageType = "NodeSilence"
 	TxEOF                   = MessageType("TxEOF")
@@ -84,15 +81,6 @@ type Reply struct {
 	MessageID uint64
 	Result    bool
 }
-
-//func MergeMessage(msgType MessageType, content []byte) []byte {
-//	b := make([]byte, PrefixMsgTypeLen)
-//	for i, v := range []byte(msgType) {
-//		b[i] = v
-//	}
-//	merge := append(b, content...)
-//	return merge
-//}
 
 func SplitMessage(message []byte) (MessageType, []byte) {
 	if len(message) < config.PrefixMsgTypeLen {

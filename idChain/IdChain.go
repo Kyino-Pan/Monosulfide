@@ -33,6 +33,10 @@ type IdChain struct {
 	tmpTopHash    crypt.Hash
 }
 
+func (idc *IdChain) GetMap() map[string]*Node {
+	return idc.NodeMap
+}
+
 func (idc *IdChain) SetViewId(u uint64) {
 	idc.viewId = u
 }

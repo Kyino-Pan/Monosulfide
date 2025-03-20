@@ -23,6 +23,10 @@ type Shard struct {
 	tempBlock   *Block.FideBlock
 }
 
+func (sh *Shard) GetMap() map[string]*idChain.Node {
+	return sh.NodeMap
+}
+
 func (sh *Shard) Main() *idChain.Node {
 	return sh.mainNode
 }
