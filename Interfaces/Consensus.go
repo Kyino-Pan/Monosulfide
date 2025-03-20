@@ -17,6 +17,7 @@ type Consensus interface {
 	EnablePropose()
 	DisablePropose()
 	HandleMsg(*message.Message) bool
+	Id() int
 }
 
 var Con = make([]Consensus, 4)

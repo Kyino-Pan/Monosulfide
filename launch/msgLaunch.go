@@ -1,7 +1,8 @@
 package launch
 
 import (
-	"blockEmulator/Spiral"
+	"blockEmulator/Interfaces"
+	"blockEmulator/Monosulfide"
 	"blockEmulator/config"
 	"blockEmulator/idChain"
 	"blockEmulator/message"
@@ -32,8 +33,8 @@ func LaunchIdMsg(m *message.Message) {
 	SignAndLaunch(m, config.IdMod)
 }
 
-func LaunchSpiMsg(m *message.Message) {
-	SignAndLaunch(m, config.SpiMod)
+func LaunchFideMsg(m *message.Message) {
+	SignAndLaunch(m, config.FideMod)
 }
 
 func SignAndLaunch(m *message.Message, id int) {
@@ -115,8 +116,8 @@ func _launchPad(msg *message.Message) {
 			}
 			_launch_(MSG)
 		}
-	case addr == config.SpiRunningAddr:
-		for _, node := range Spiral.LocalShard.NodeMap {
+	case addr == config.FideRunningAddr:
+		for _, node := range Monosulfide.LocalShard.NodeMap {
 			if node.IsLegal() == true {
 				MSG := &message.Message{
 					Type:       msg.Type,
@@ -155,4 +156,9 @@ func ClearMsgBuffer() {
 		BCMsgPool <- msg
 	}
 	MsgBuffer = make([]*message.Message, 0)
+}
+
+func SendMsg(con Interfaces.Consensus, m *message.Message) {
+	(*message.Content)(&m.Content).Sign(idChain.RunningNode.StrKey()).Sign(strconv.Itoa(con.Id()))
+	LaunchPool <- m
 }

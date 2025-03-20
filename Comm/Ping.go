@@ -21,7 +21,7 @@ func (com *PingCom) Type() Interfaces.CommType {
 func (com *PingCom) Request(...*[]byte) bool {
 	com.lock.Lock()
 	defer com.lock.Unlock()
-	if config.SpiConf.Enable {
+	if config.FideConf.Enable {
 		for _, n := range idChain.IDC.NodeMap {
 			com.con.SendMsg(&message.Message{
 				Type:       com.Type().RequestType(),

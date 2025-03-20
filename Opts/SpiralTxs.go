@@ -3,36 +3,36 @@ package Opts
 import (
 	"blockEmulator/Block"
 	"blockEmulator/Interfaces"
+	"blockEmulator/Monosulfide"
 	"blockEmulator/Proposals"
-	"blockEmulator/Spiral"
 	"blockEmulator/idChain"
 	"blockEmulator/message"
 	"log"
 )
 
-type SpiralTxOpt struct {
+type FideTxOpt struct {
 	con       Interfaces.Consensus
 	tempBlock Block.Block
 }
 
-func (op *SpiralTxOpt) Reset(con Interfaces.Consensus) message.RequestType {
+func (op *FideTxOpt) Reset(con Interfaces.Consensus) message.RequestType {
 	op.con = con
-	con.GetProposalBuffer().SetPriority(message.SpiralTx, Proposals.NormalPriority)
-	return message.SpiralTx
+	con.GetProposalBuffer().SetPriority(message.FideTx, Proposals.NormalPriority)
+	return message.FideTx
 }
 
-func (op *SpiralTxOpt) Propose(...*[]byte) {
+func (op *FideTxOpt) Propose(...*[]byte) {
 	byteArray := new([]byte)
-	//pyramid.LocalShard.WaitForSpiralTxs()
-	op.con.Propose(message.SpiralTx, byteArray)
+	//pyramid.LocalShard.WaitForFideTxs()
+	op.con.Propose(message.FideTx, byteArray)
 }
 
-func (op *SpiralTxOpt) PrepareAfterLock(vars []*[]byte) bool {
-	shard := Spiral.LocalShard
+func (op *FideTxOpt) PrepareAfterLock(vars []*[]byte) bool {
+	shard := Monosulfide.LocalShard
 	op.tempBlock = shard.Chain.GenerateBlock()
 	if op.tempBlock == nil {
 		// generate failed.
-		Interfaces.Operations[message.SpiralTx].Propose()
+		Interfaces.Operations[message.FideTx].Propose()
 		return false
 	}
 	byteBlock := op.tempBlock.Encode()
@@ -40,16 +40,16 @@ func (op *SpiralTxOpt) PrepareAfterLock(vars []*[]byte) bool {
 	return true
 }
 
-func (op *SpiralTxOpt) Verify(vars [][]byte) bool {
+func (op *FideTxOpt) Verify(vars [][]byte) bool {
 	//pyramid.LocalShard.Lock()
 	byteBlock := vars[0]
-	b := new(Block.SpiralBlock).Decode(byteBlock)
-	if block, ok := b.(*Block.SpiralBlock); ok {
-		flag := Spiral.LocalShard.Chain.VerifyBlock(block)
+	b := new(Block.FideBlock).Decode(byteBlock)
+	if block, ok := b.(*Block.FideBlock); ok {
+		flag := Monosulfide.LocalShard.Chain.VerifyBlock(block)
 		if flag == true {
 			op.tempBlock = block
 		} else {
-			log.Println(message.SpiralTx, "Block Verification Failed")
+			log.Println(message.FideTx, "Block Verification Failed")
 		}
 		return flag
 	} else {
@@ -58,12 +58,12 @@ func (op *SpiralTxOpt) Verify(vars [][]byte) bool {
 	return false
 }
 
-func (op *SpiralTxOpt) Execute() {
-	shard := Spiral.LocalShard
+func (op *FideTxOpt) Execute() {
+	shard := Monosulfide.LocalShard
 	shard.Append(op.tempBlock)
 	//shard.Unlock()
-	if Spiral.LocalShard.Main() == idChain.RunningNode {
-		Interfaces.Operations[message.SpiralTx].Propose()
+	if Monosulfide.LocalShard.Main() == idChain.RunningNode {
+		Interfaces.Operations[message.FideTx].Propose()
 	}
 	return
 }

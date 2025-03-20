@@ -1,4 +1,4 @@
-package Spiral
+package Monosulfide
 
 import (
 	"blockEmulator/Block"
@@ -19,14 +19,14 @@ import (
 
 var finishCount = make(map[int]bool)
 
-type SpiChain struct {
+type MonosulfideChain struct {
 	storage      *storage.Storage
 	TxPool       *Tx.Pool
 	lock         sync.RWMutex
 	ownerShard   *Shard
 	Blocks       map[crypt.Hash]Block.Block
 	TopBlockHash map[int]crypt.Hash
-	blockBuffer  map[int]map[crypt.Hash]*Block.SpiralBlock
+	blockBuffer  map[int]map[crypt.Hash]*Block.FideBlock
 	//blockAck     map[int]map[int]crypt.Hash // map[i][j]=k means shard i 已经确认shard j的第k个block
 	nonce uint64
 	exp   *Record
@@ -50,25 +50,25 @@ func (r *Record) Refresh() *Record {
 	return r
 }
 
-func (sc *SpiChain) Id() int {
-	return sc.ownerShard.Id
+func (mc *MonosulfideChain) Id() int {
+	return mc.ownerShard.Id
 }
 
-func (sc *SpiChain) GenerateBlock() Block.Block {
-	sc.lock.RLock()
-	defer sc.lock.RUnlock()
+func (mc *MonosulfideChain) GenerateBlock() Block.Block {
+	mc.lock.RLock()
+	defer mc.lock.RUnlock()
 	cnt := 0
-	subHashes := make([][]byte, config.SpiConf.ShardAmount)
-	blockBody := &Block.SpiralBody{
+	subHashes := make([][]byte, config.FideConf.ShardAmount)
+	blockBody := &Block.FideBody{
 		Intra:     nil,
-		SubBlocks: make([]*Block.SubBlock, config.SpiConf.ShardAmount),
+		SubBlocks: make([]*Block.SubBlock, config.FideConf.ShardAmount),
 	}
-	txsArray := sc.TxPool.PackageRelayTxs()
+	txsArray := mc.TxPool.PackageRelayTxs()
 	amount := 0
 	for _, txs := range txsArray {
 		amount += len(txs)
 	}
-	for i := 0; i < config.SpiConf.ShardAmount; i++ {
+	for i := 0; i < config.FideConf.ShardAmount; i++ {
 		// package txs to different shards from txPool
 		if i == LocalShard.Id {
 			innerTx := txsArray[i]
@@ -80,7 +80,7 @@ func (sc *SpiChain) GenerateBlock() Block.Block {
 		txs := txsArray[i]
 		subBlock := &Block.SubBlock{
 			CHead: &Block.CBlockHead{
-				RemoteBlockHash: sc.TopBlockHash[i].Bytes(),
+				RemoteBlockHash: mc.TopBlockHash[i].Bytes(),
 				TxToot:          Tx.GenTxRoot(txs),
 			},
 			CBody: &Block.CBlockBody{Txs: txs},
@@ -89,10 +89,10 @@ func (sc *SpiChain) GenerateBlock() Block.Block {
 		subHashes[i] = subBlock.Hash().Bytes()
 		cnt += len(txs)
 	}
-	ret := &Block.SpiralBlock{
-		H: &Block.SpiralHead{
-			Nonce:        sc.Nonce() + 1,
-			ParentHash:   sc.TopBlockHash[sc.Id()],
+	ret := &Block.FideBlock{
+		H: &Block.FideHead{
+			Nonce:        mc.Nonce() + 1,
+			ParentHash:   mc.TopBlockHash[mc.Id()],
 			IntraTxRoot:  Tx.GenTxRoot(blockBody.Txs()),
 			SubBlockRoot: Tx.GenMPTRoot(subHashes),
 			StateRoot:    nil, //todo
@@ -104,37 +104,37 @@ func (sc *SpiChain) GenerateBlock() Block.Block {
 		// 打包完所有的数据了
 		ret.H.StateRoot = []byte("FINISH")
 	}
-	sc.exp.GenAmount += cnt
+	mc.exp.GenAmount += cnt
 	//ret.Print()
 	return ret
 }
 
-func (sc *SpiChain) Append(block *Block.SpiralBlock) {
-	sc.lock.Lock()
-	defer sc.lock.Unlock()
+func (mc *MonosulfideChain) Append(block *Block.FideBlock) {
+	mc.lock.Lock()
+	defer mc.lock.Unlock()
 
 	var closeProcess = false
-	//sc.TxPool.Print()
-	isLegal := sc.VerifyBlock(block)
+	//mc.TxPool.Print()
+	isLegal := mc.VerifyBlock(block)
 	tBegin := block.H.Time
 	if isLegal {
-		if block.B.SubBlocks[sc.Id()].CHead == nil {
+		if block.B.SubBlocks[mc.Id()].CHead == nil {
 			// 本shard发布的块
 			need := true
 			if block.H.StateRoot != nil {
-				log.Printf("shard%v %v (remaining%v)", sc.Id(), string(block.H.StateRoot),
-					config.SpiConf.ShardAmount-len(finishCount))
+				log.Printf("shard%v %v (remaining%v)", mc.Id(), string(block.H.StateRoot),
+					config.FideConf.ShardAmount-len(finishCount))
 				need = false
-				finishCount[sc.Id()] = true
-				if len(finishCount) == config.SpiConf.ShardAmount || config.TPS_TEST {
+				finishCount[mc.Id()] = true
+				if len(finishCount) == config.FideConf.ShardAmount || config.TPS_TEST {
 					if LocalShard.Main() == idChain.RunningNode {
-						Interfaces.Communications[Interfaces.SyncSpiBlock].Request()
+						Interfaces.Communications[Interfaces.SyncFideBlock].Request()
 						LocalShard.Chain.Save()
 					}
 					closeProcess = true
 				}
-				if config.SpiConf.ShardAmount-len(finishCount) == 1 {
-					for i := 0; i < config.SpiConf.ShardAmount; i++ {
+				if config.FideConf.ShardAmount-len(finishCount) == 1 {
+					for i := 0; i < config.FideConf.ShardAmount; i++ {
 						if exist, _ := finishCount[i]; !exist {
 							log.Printf("shard %v unfinished", i)
 						}
@@ -143,39 +143,39 @@ func (sc *SpiChain) Append(block *Block.SpiralBlock) {
 			}
 			// 如果是本shard发布的block，先只commit片内交易
 			Txs := block.Body().Txs()
-			sc.TxPool.RemoveTxs(Txs)
+			mc.TxPool.RemoveTxs(Txs)
 
 			// 记录交易延迟
 			tIntraCost := time.Since(tBegin)
-			sc.exp.IntraTxAmount += len(Txs)
-			sc.exp.IntraTxDelaySum += tIntraCost * time.Duration(len(Txs))
+			mc.exp.IntraTxAmount += len(Txs)
+			mc.exp.IntraTxDelaySum += tIntraCost * time.Duration(len(Txs))
 
 			bHash := block.Hash()
-			sc.Blocks[bHash] = block
-			sc.TopBlockHash[sc.Id()] = bHash
+			mc.Blocks[bHash] = block
+			mc.TopBlockHash[mc.Id()] = bHash
 			txToCommit := make([]*Tx.Transaction, 0)
 			for sid, b := range block.B.SubBlocks {
-				if sid == sc.Id() {
+				if sid == mc.Id() {
 					continue
 				}
 				txToCommit = append(txToCommit, b.CBody.Txs...)
 			}
-			sc.LockMoney(txToCommit)
-			sc.recordCBlock(sc.Id(), block)
-			sc.nonce++
-			Interfaces.Communications[Interfaces.SyncSpiBlock].Request()
+			mc.LockMoney(txToCommit)
+			mc.recordCBlock(mc.Id(), block)
+			mc.nonce++
+			Interfaces.Communications[Interfaces.SyncFideBlock].Request()
 			if need {
-				sc.storage.AddBlock(block)
+				mc.storage.AddBlock(block)
 			}
 			block.Light()
 		} else {
 			// 如果是其他shard的block
 			// check block-ack
 			blockMaker := -1
-			for i := 0; i < config.SpiConf.ShardAmount; i++ {
+			for i := 0; i < config.FideConf.ShardAmount; i++ {
 				if block.B.SubBlocks[i].CHead == nil {
 					blockMaker = i
-					if i == sc.Id() {
+					if i == mc.Id() {
 						log.Panic()
 						return
 					}
@@ -191,60 +191,60 @@ func (sc *SpiChain) Append(block *Block.SpiralBlock) {
 				need = false
 				log.Printf("shard%v %v", blockMaker, string(block.H.StateRoot))
 				finishCount[blockMaker] = true
-				if len(finishCount) == config.SpiConf.ShardAmount || config.TPS_TEST {
+				if len(finishCount) == config.FideConf.ShardAmount || config.TPS_TEST {
 					if LocalShard.Main() == idChain.RunningNode {
 						LocalShard.Chain.Save()
 					}
 					closeProcess = true
 				}
 			}
-			sc.TopBlockHash[blockMaker] = block.Hash()
+			mc.TopBlockHash[blockMaker] = block.Hash()
 			for id, b := range block.B.SubBlocks {
 				if id == blockMaker {
 					continue
 				}
-				//sc.blockAck[blockMaker][id] = *crypt.NewHash(b.CHead.RemoteBlockHash)
-				if id == sc.Id() {
-					sc.TxPool.RemoveTxs(b.CBody.Txs)
+				//mc.blockAck[blockMaker][id] = *crypt.NewHash(b.CHead.RemoteBlockHash)
+				if id == mc.Id() {
+					mc.TxPool.RemoveTxs(b.CBody.Txs)
 					// 记录交易延迟
 					CTxAmount := len(b.CBody.Txs)
 					tCTx := time.Since(tBegin)
-					sc.exp.CTxAmount += CTxAmount
-					sc.exp.CTxDelaySum += tCTx * time.Duration(CTxAmount)
+					mc.exp.CTxAmount += CTxAmount
+					mc.exp.CTxDelaySum += tCTx * time.Duration(CTxAmount)
 				}
 			}
 			if need && !config.ClassRelay {
-				sc.storage.AddBlock(block.Light())
+				mc.storage.AddBlock(block.Light())
 			}
 		}
 		if closeProcess {
 			config.STOPPER <- true
 		}
-		//sc.TxPool.Print()
+		//mc.TxPool.Print()
 	} else {
 		log.Panic()
 	}
 }
 
-func (sc *SpiChain) VerifyBlock(block *Block.SpiralBlock) bool {
+func (mc *MonosulfideChain) VerifyBlock(block *Block.FideBlock) bool {
 	var isLegal bool
-	if block.B.SubBlocks[sc.Id()] == nil {
-		isLegal = sc._verifyLocalBlock(block)
+	if block.B.SubBlocks[mc.Id()] == nil {
+		isLegal = mc._verifyLocalBlock(block)
 	} else {
-		isLegal = sc._verifyRemoteBlock(block)
+		isLegal = mc._verifyRemoteBlock(block)
 	}
 	return isLegal
 }
 
-func (sc *SpiChain) Nonce() uint64 {
-	return sc.nonce
+func (mc *MonosulfideChain) Nonce() uint64 {
+	return mc.nonce
 }
 
-func (sc *SpiChain) _verifyLocalBlock(block *Block.SpiralBlock) bool {
+func (mc *MonosulfideChain) _verifyLocalBlock(block *Block.FideBlock) bool {
 	//todo nonce check
 
 	// check pre-block hash
-	if block.H.ParentHash != sc.TopBlockHash[sc.Id()] {
+	if block.H.ParentHash != mc.TopBlockHash[mc.Id()] {
 		log.Println("ParentHash error")
 		return false
 	}
@@ -257,9 +257,9 @@ func (sc *SpiChain) _verifyLocalBlock(block *Block.SpiralBlock) bool {
 	txAll = append(txAll, block.B.Intra...)
 
 	//check subBlocks
-	subHashes := make([][]byte, config.SpiConf.ShardAmount)
+	subHashes := make([][]byte, config.FideConf.ShardAmount)
 	for i, subB := range block.B.SubBlocks {
-		if i == sc.Id() {
+		if i == mc.Id() {
 			subHashes[i] = []byte("")
 			continue
 		}
@@ -283,7 +283,7 @@ func (sc *SpiChain) _verifyLocalBlock(block *Block.SpiralBlock) bool {
 	return true
 }
 
-func (sc *SpiChain) _verifyRemoteBlock(block *Block.SpiralBlock) bool {
+func (mc *MonosulfideChain) _verifyRemoteBlock(block *Block.FideBlock) bool {
 	// determined the block proposer
 	var blockMaker = -1
 	for i, b := range block.B.SubBlocks {
@@ -297,7 +297,7 @@ func (sc *SpiChain) _verifyRemoteBlock(block *Block.SpiralBlock) bool {
 		return false
 	}
 	// Check sub-block root and hash-chain only.
-	hashes := make([][]byte, config.SpiConf.ShardAmount)
+	hashes := make([][]byte, config.FideConf.ShardAmount)
 	for i, b := range block.B.SubBlocks {
 		if i == blockMaker {
 			continue
@@ -308,26 +308,26 @@ func (sc *SpiChain) _verifyRemoteBlock(block *Block.SpiralBlock) bool {
 		log.Println("SubBlockRoot error")
 		return false
 	}
-	if block.H.ParentHash != sc.TopBlockHash[blockMaker] {
+	if block.H.ParentHash != mc.TopBlockHash[blockMaker] {
 		log.Println("Error seq")
 	}
 	return true
 }
 
-func (sc *SpiChain) LockMoney(commit []*Tx.Transaction) {
-	sc.TxPool.RemoveTxs(commit)
+func (mc *MonosulfideChain) LockMoney(commit []*Tx.Transaction) {
+	mc.TxPool.RemoveTxs(commit)
 	//todo
 }
 
-func (sc *SpiChain) recordCBlock(sid int, block *Block.SpiralBlock) {
+func (mc *MonosulfideChain) recordCBlock(sid int, block *Block.FideBlock) {
 	hash := block.Hash()
-	sc.blockBuffer[sid][hash] = block
+	mc.blockBuffer[sid][hash] = block
 	if block.Nonce() == 0 {
 		log.Panic()
 	}
 }
 
-//func (sc *SpiChain) ack(sid, ackId int, hash crypt.Hash) {
+//func (sc *MonosulfideChain) ack(sid, ackId int, hash crypt.Hash) {
 //	if b := sc.Blocks[hash]; b != nil {
 //		//log.Printf("S%v B%v already commited.", sid, b.Nonce())
 //		return
@@ -347,7 +347,7 @@ func (sc *SpiChain) recordCBlock(sid int, block *Block.SpiralBlock) {
 //
 //	}
 //	sc.blockAck[sid][ackId][hash] += 1
-//	if sc.blockAck[sid][hash] == config.SpiConf.Threshold {
+//	if sc.blockAck[sid][hash] == config.FideConf.Threshold {
 //		block := sc.blockBuffer[sid][hash]
 //		tBegin := block.H.Time
 //		if sid == sc.Id() {
@@ -379,8 +379,8 @@ func (sc *SpiChain) recordCBlock(sid int, block *Block.SpiralBlock) {
 //	}
 //}
 
-func (sc *SpiChain) EncodedExp() *[]byte {
-	bs, err := json.Marshal(sc.exp)
+func (mc *MonosulfideChain) EncodedExp() *[]byte {
+	bs, err := json.Marshal(mc.exp)
 	if err != nil {
 		log.Panic()
 	}
@@ -390,7 +390,7 @@ func (sc *SpiChain) EncodedExp() *[]byte {
 var saved = false
 var lock sync.Mutex
 
-func (sc *SpiChain) Save() {
+func (mc *MonosulfideChain) Save() {
 	lock.Lock()
 	defer lock.Unlock()
 	if idChain.RunningNode != LocalShard.mainNode {
@@ -401,17 +401,17 @@ func (sc *SpiChain) Save() {
 	}
 	saved = true
 	conTime := time.Since(config.TxBegin)
-	writer := storage.NewCsvWriter(0, "Spiral-Result-"+strconv.Itoa(sc.Id())+".csv")
+	writer := storage.NewCsvWriter(0, "Fide-Result-"+strconv.Itoa(mc.Id())+".csv")
 	go writer.Run()
 	log.Printf("S%v %v", idChain.RunningNode.ShardID, idChain.RunningNode.IpAddr)
-	log.Print(sc.exp)
-	numI := sc.exp.IntraTxAmount
-	numC := sc.exp.CTxAmount
-	sumI := sc.exp.IntraTxDelaySum
-	sumC := sc.exp.CTxDelaySum
+	log.Print(mc.exp)
+	numI := mc.exp.IntraTxAmount
+	numC := mc.exp.CTxAmount
+	sumI := mc.exp.IntraTxDelaySum
+	sumC := mc.exp.CTxDelaySum
 	writer.Writef(strconv.Itoa(numI))
 	writer.Writef(strconv.Itoa(numC))
-	writer.Writef(strconv.Itoa(sc.exp.GenAmount))
+	writer.Writef(strconv.Itoa(mc.exp.GenAmount))
 	writer.Writef(sumI.String())
 	writer.Writef(sumC.String())
 	writer.Writef("%d", (sumI / time.Duration(numI)).Milliseconds())
@@ -420,41 +420,41 @@ func (sc *SpiChain) Save() {
 	writer.Writef("%v", float64(numC+numI)/conTime.Seconds())                      // TPS
 	writer.Writef("%.2f", config.CommCalc)                                         // KB
 	writer.Writef(strconv.Itoa(config.TotalDataSize) + "Txs")
-	writer.Writef("S" + strconv.Itoa(config.SpiralShardAmount) + "N" + strconv.Itoa(len(idChain.IDC.NodeMap)))
-	Interfaces.Communications[Interfaces.SyncSpiBlock].Request()
+	writer.Writef("S" + strconv.Itoa(config.FideShardAmount) + "N" + strconv.Itoa(len(idChain.IDC.NodeMap)))
+	Interfaces.Communications[Interfaces.SyncFideBlock].Request()
 	time.Sleep(config.ExitDelay)
 	return
 }
 
-func NewSpiChain(shard *Shard) *SpiChain {
-	ret := &SpiChain{
+func NewFideChain(shard *Shard) *MonosulfideChain {
+	ret := &MonosulfideChain{
 		storage:      nil,
 		lock:         sync.RWMutex{},
 		ownerShard:   shard,
 		Blocks:       make(map[crypt.Hash]Block.Block),
 		TopBlockHash: make(map[int]crypt.Hash),
-		blockBuffer:  make(map[int]map[crypt.Hash]*Block.SpiralBlock),
+		blockBuffer:  make(map[int]map[crypt.Hash]*Block.FideBlock),
 		//blockAck:     make(map[int]map[crypt.Hash]int),
 		exp: new(Record).Refresh(),
 	}
 
-	baseBlock := &Block.SpiralBlock{
-		H: &Block.SpiralHead{
+	baseBlock := &Block.FideBlock{
+		H: &Block.FideHead{
 			Nonce:      0,
 			ParentHash: idChain.IDC.Chain.TopBlockHash[0],
 		},
-		B: &Block.SpiralBody{
+		B: &Block.FideBody{
 			Intra:     nil,
 			SubBlocks: make([]*Block.SubBlock, 0),
 		},
 	}
-	for i := 0; i < config.SpiConf.ShardAmount; i++ {
+	for i := 0; i < config.FideConf.ShardAmount; i++ {
 		baseBlock.B.SubBlocks = append(baseBlock.B.SubBlocks, Block.EmptySubBlock())
 	}
 	fmt.Println(baseBlock.Hash().Bytes())
-	for i := 0; i < config.SpiConf.ShardAmount; i++ {
+	for i := 0; i < config.FideConf.ShardAmount; i++ {
 		//ret.blockAck[i] = make(map[crypt.Hash]int)
-		ret.blockBuffer[i] = make(map[crypt.Hash]*Block.SpiralBlock)
+		ret.blockBuffer[i] = make(map[crypt.Hash]*Block.FideBlock)
 		ret.TopBlockHash[i] = baseBlock.Hash()
 		ret.blockBuffer[i][baseBlock.Hash()] = baseBlock
 	}
@@ -462,7 +462,7 @@ func NewSpiChain(shard *Shard) *SpiChain {
 	return ret
 }
 
-func (sc *SpiChain) EnableStorage(port string) {
-	sc.storage = storage.NewStorage(port, uint64(sc.Id()))
+func (mc *MonosulfideChain) EnableStorage(port string) {
+	mc.storage = storage.NewStorage(port, uint64(mc.Id()))
 
 }

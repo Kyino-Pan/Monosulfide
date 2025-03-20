@@ -22,6 +22,6 @@ func Init() {
 	Deploy(new(CrossCommitOpt), pyr)
 	Deploy(new(AppendCBlockOpt), pyr)
 
-	spi := Interfaces.Con[config.SpiMod]
-	Deploy(new(SpiralTxOpt), spi)
+	Fide := Interfaces.Con[config.FideMod]
+	Deploy(new(FideTxOpt), Fide)
 }

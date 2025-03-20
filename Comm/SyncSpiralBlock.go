@@ -3,7 +3,7 @@ package Comm
 import (
 	"blockEmulator/Block"
 	"blockEmulator/Interfaces"
-	"blockEmulator/Spiral"
+	"blockEmulator/Monosulfide"
 	"blockEmulator/config"
 	"blockEmulator/crypt"
 	"blockEmulator/idChain"
@@ -22,25 +22,25 @@ type SyncSBlockCom struct {
 }
 
 func (com *SyncSBlockCom) Type() Interfaces.CommType {
-	return Interfaces.SyncSpiBlock
+	return Interfaces.SyncFideBlock
 }
 
 func (com *SyncSBlockCom) Request(...*[]byte) bool {
 	con := com.con
-	localChain := Spiral.LocalShard.Chain
-	sAmount := config.SpiConf.ShardAmount
+	localChain := Monosulfide.LocalShard.Chain
+	sAmount := config.FideConf.ShardAmount
 	content := new(message.Content)
-	block := localChain.Blocks[localChain.TopBlockHash[localChain.Id()]].(*Block.SpiralBlock)
+	block := localChain.Blocks[localChain.TopBlockHash[localChain.Id()]].(*Block.FideBlock)
 	for sid := 0; sid < sAmount; sid++ {
 		if sid == localChain.Id() {
 			continue
 		}
 		// prepare lightened block for shard sid
-		tempBlock := &Block.SpiralBlock{
+		tempBlock := &Block.FideBlock{
 			H: block.H,
-			B: &Block.SpiralBody{
+			B: &Block.FideBody{
 				Intra:     nil,
-				SubBlocks: make([]*Block.SubBlock, config.SpiConf.ShardAmount),
+				SubBlocks: make([]*Block.SubBlock, config.FideConf.ShardAmount),
 			},
 		}
 		for i, subB := range block.B.SubBlocks {
@@ -52,17 +52,17 @@ func (com *SyncSBlockCom) Request(...*[]byte) bool {
 			}
 		}
 		bb := tempBlock.Encode()
-		if idChain.RunningNode == Spiral.LocalShard.Main() {
+		if idChain.RunningNode == Monosulfide.LocalShard.Main() {
 			content = message.NewByteContent(&bb)
 		} else {
 			byteHash := tempBlock.Hash().Bytes()
 			content = message.NewByteContent(&byteHash).
 				AppendByteContent(crypt.UintToBytes(block.Nonce()))
 		}
-		for _, node := range Spiral.GlobalShards[sid].NodeMap {
+		for _, node := range Monosulfide.GlobalShards[sid].NodeMap {
 			addr := node.IpAddr
 			con.SendMsg(&message.Message{
-				Type:       Interfaces.SyncSpiBlock.RequestType(),
+				Type:       Interfaces.SyncFideBlock.RequestType(),
 				Content:    *content,
 				RemoteInfo: addr,
 			})
@@ -75,7 +75,7 @@ func (com *SyncSBlockCom) HandleRequest(msg *message.Message) bool {
 	com.lock.Lock()
 	defer com.lock.Unlock()
 	remoteNode := idChain.IDC.NodeMap[msg.RemoteInfo]
-	remoteShard := Spiral.GlobalShards[remoteNode.ShardID]
+	remoteShard := Monosulfide.GlobalShards[remoteNode.ShardID]
 	RemoteSID := remoteShard.Id
 	if com.reqCnt[RemoteSID] == nil {
 		com.blocks[RemoteSID] = make(map[crypt.Hash]Block.Block)
@@ -85,12 +85,12 @@ func (com *SyncSBlockCom) HandleRequest(msg *message.Message) bool {
 	contents := msg.GetContents()
 	var hash crypt.Hash
 	var nonce uint64
-	localChain := Spiral.LocalShard.Chain
+	localChain := Monosulfide.LocalShard.Chain
 	if remoteShard.Main() == remoteNode {
 		//sender is the main node, the msg contains the block itself.
 		byteBlock := contents[0]
-		b := new(Block.SpiralBlock).Decode(byteBlock)
-		block, _ := b.(*Block.SpiralBlock)
+		b := new(Block.FideBlock).Decode(byteBlock)
+		block, _ := b.(*Block.FideBlock)
 		nonce = block.Nonce()
 		if localChain.Blocks[block.Hash()] != nil {
 			log.Printf("Got an existing block from shard%v, time = %v", RemoteSID, block.H.Time.String())
@@ -131,12 +131,12 @@ func (com *SyncSBlockCom) HandleRequest(msg *message.Message) bool {
 func (com *SyncSBlockCom) CheckBlock(rid int) {
 	for hash, ackAmount := range com.reqCnt[rid] {
 		b := com.blocks[rid][hash]
-		if b == nil || ackAmount < Spiral.GlobalShards[rid].Threshold() {
+		if b == nil || ackAmount < Monosulfide.GlobalShards[rid].Threshold() {
 			continue
 		}
-		block, _ := b.(*Block.SpiralBlock)
+		block, _ := b.(*Block.FideBlock)
 		if com.finish[rid][hash] == false {
-			localShard := Spiral.LocalShard // i-shards internal tx is recorded in local shard txPool
+			localShard := Monosulfide.LocalShard // i-shards internal tx is recorded in local shard txPool
 			localShard.Append(block)
 			//log.Printf("S%v B%v accecpted", rid, b.Nonce())
 			delete(com.blocks[rid], hash)
@@ -157,7 +157,7 @@ func (com *SyncSBlockCom) HandleResponse(*message.Message) {
 }
 
 func (com *SyncSBlockCom) Reset() Interfaces.CommType {
-	com.con = Interfaces.Con[config.SpiMod]
+	com.con = Interfaces.Con[config.FideMod]
 	com.reqCnt = make(map[int]map[crypt.Hash]uint64)
 	com.blocks = make(map[int]map[crypt.Hash]Block.Block)
 	com.finish = make(map[int]map[crypt.Hash]bool)

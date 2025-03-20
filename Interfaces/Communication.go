@@ -17,17 +17,17 @@ type Communication interface {
 type CommType string
 
 const (
-	CrossPrepare CommType = "CrossPrepare"
-	CrossReply   CommType = "CrossReply"
-	CrossLock    CommType = "CrossLock"
-	SyncIBlock   CommType = "SyncIBlock"
-	SyncSpiBlock CommType = "SyncSpiBlock"
-	Log          CommType = "Log"
-	Finish       CommType = "Finish"
-	MigratePro   CommType = "MigratePro" // migrate proposal buffer
-	ViewChange   CommType = "ViewChange"
-	MainBegin    CommType = "MainBegin"
-	Ping         CommType = "ping"
+	CrossPrepare  CommType = "CrossPrepare"
+	CrossReply    CommType = "CrossReply"
+	CrossLock     CommType = "CrossLock"
+	SyncIBlock    CommType = "SyncIBlock"
+	SyncFideBlock CommType = "SyncFideBlock"
+	Log           CommType = "Log"
+	Finish        CommType = "Finish"
+	MigratePro    CommType = "MigratePro" // migrate proposal buffer
+	ViewChange    CommType = "ViewChange"
+	MainBegin     CommType = "MainBegin"
+	Ping          CommType = "ping"
 )
 
 func (ct CommType) RequestType() message.MessageType {

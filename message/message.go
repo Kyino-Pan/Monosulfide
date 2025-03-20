@@ -115,5 +115,5 @@ func SplitMessage(message []byte) (MessageType, []byte) {
 var NewEpoch RequestType
 
 var InternalTx RequestType = "InternalTx"
-var SpiralTx RequestType = "SpiralTx"
+var FideTx RequestType = "FideTx"
 var RelayTx RequestType = "RelayTx"

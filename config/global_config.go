@@ -23,7 +23,7 @@ const (
 	IdRunningAddr    = "IdRunningAddr"      // message will be delivered to every non-sleeping nodes.
 	IdLegalAddr      = "IdLegalAddr"        // message will be delivered to EVERY node.
 	PyrRunningAddr   = "pyramidRunningAddr" //
-	SpiRunningAddr   = "spiRunningAddr"     //
+	FideRunningAddr  = "FideRunningAddr"    //
 	PyramidMainAddr  = "PyramidMainAddr"    //
 	PyramidRelateI   = "PyramidRelateI"     // related shards mainNodes
 	PrivateKeyPEM    = "./privateKeyPEM.txt"
@@ -35,7 +35,7 @@ const (
 	PrefixMsgTypeLen = 40
 	IdMod            = 0
 	PyrMod           = 1
-	SpiMod           = 2
+	FideMod          = 2
 	RelayMod         = 3
 	EoFDelay         = 16 * time.Second
 	RealRand         = false

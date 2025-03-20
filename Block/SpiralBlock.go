@@ -11,11 +11,11 @@ import (
 )
 
 type (
-	SpiralBlock struct {
-		H *SpiralHead
-		B *SpiralBody
+	FideBlock struct {
+		H *FideHead
+		B *FideBody
 	}
-	SpiralHead struct {
+	FideHead struct {
 		Nonce        uint64
 		ParentHash   crypt.Hash // 上一区块Hash
 		IntraTxRoot  []byte     // 片内交易的MerkleRoot
@@ -23,7 +23,7 @@ type (
 		StateRoot    []byte
 		Time         time.Time
 	}
-	SpiralBody struct {
+	FideBody struct {
 		Intra     []*Tx.Transaction
 		SubBlocks []*SubBlock
 	}
@@ -40,7 +40,7 @@ type (
 	}
 )
 
-func (block *SpiralBlock) Light() Block {
+func (block *FideBlock) Light() Block {
 	block.B.Intra = nil
 	for _, b := range block.B.SubBlocks {
 		if b.CBody != nil {
@@ -54,15 +54,15 @@ func (b SubBlock) Hash() crypt.Hash {
 	return *crypt.NewHash(crypt.GetDigest(b.CHead))
 }
 
-func (head *SpiralHead) TxRoot() []byte {
+func (head *FideHead) TxRoot() []byte {
 	return head.IntraTxRoot
 }
 
-func (sBody SpiralBody) Txs() []*Tx.Transaction {
+func (sBody FideBody) Txs() []*Tx.Transaction {
 	return sBody.Intra
 }
 
-func (head *SpiralHead) ParentHashes() map[int]crypt.Hash {
+func (head *FideHead) ParentHashes() map[int]crypt.Hash {
 	mp := make(map[int]crypt.Hash)
 	if head == nil {
 		return mp
@@ -71,43 +71,43 @@ func (head *SpiralHead) ParentHashes() map[int]crypt.Hash {
 	return mp
 }
 
-func (block *SpiralBlock) Nonce() uint64 {
+func (block *FideBlock) Nonce() uint64 {
 	return block.H.Nonce
 }
 
-func (sBody SpiralBody) EncodeB() []byte {
+func (sBody FideBody) EncodeB() []byte {
 	return crypt.GetDigest(sBody)
 }
 
-func (head *SpiralHead) EncodeH() []byte {
+func (head *FideHead) EncodeH() []byte {
 	return crypt.GetDigest(head)
 }
 
-func (block *SpiralBlock) Head() Head {
+func (block *FideBlock) Head() Head {
 	return block.H
 }
 
-func (block *SpiralBlock) Body() Body {
+func (block *FideBlock) Body() Body {
 	return block.B
 }
 
-func (block *SpiralBlock) Encode() []byte {
+func (block *FideBlock) Encode() []byte {
 	var buff bytes.Buffer
 	enc := gob.NewEncoder(&buff)
 	err := enc.Encode(block)
 	if err != nil {
 		log.Panic(err)
 	}
-	tempBlock := new(SpiralBlock).Decode(buff.Bytes())
+	tempBlock := new(FideBlock).Decode(buff.Bytes())
 	if tempBlock == nil {
 		return nil
 	}
 	return buff.Bytes()
 }
 
-func (block *SpiralBlock) Decode(byteBlock []byte) Block {
+func (block *FideBlock) Decode(byteBlock []byte) Block {
 	if byteBlock == nil {
-		return _emptySpiralBlock()
+		return _emptyFideBlock()
 	}
 	decoder := gob.NewDecoder(bytes.NewReader(byteBlock))
 	err := decoder.Decode(block)
@@ -117,27 +117,27 @@ func (block *SpiralBlock) Decode(byteBlock []byte) Block {
 	return block
 }
 
-func _emptySpiralBlock() Block {
-	return &SpiralBlock{
-		H: &SpiralHead{
+func _emptyFideBlock() Block {
+	return &FideBlock{
+		H: &FideHead{
 			ParentHash:   *crypt.EmptyHash(),
 			IntraTxRoot:  nil,
 			SubBlockRoot: nil,
 			StateRoot:    nil,
 			Time:         time.Now(),
 		},
-		B: &SpiralBody{
+		B: &FideBody{
 			Intra:     nil,
 			SubBlocks: nil,
 		},
 	}
 }
 
-func (block *SpiralBlock) Hash() crypt.Hash {
+func (block *FideBlock) Hash() crypt.Hash {
 	return *crypt.NewHash(crypt.GetDigest(block.H))
 }
 
-func (block *SpiralBlock) Print() {
+func (block *FideBlock) Print() {
 	h := block.H
 	fmt.Println("--head--")
 	fmt.Println(h.Nonce)

@@ -63,10 +63,10 @@ func main() {
 		return
 	}
 	if shardNum != 0 {
-		config.SpiralShardAmount = shardNum
-		log.Printf("shardNum = %d", config.SpiralShardAmount)
+		config.FideShardAmount = shardNum
+		log.Printf("shardNum = %d", config.FideShardAmount)
 	}
-	config.SpiConf = config.InitSpiralConfig()
+	config.FideConf = config.InitFideConfig()
 	if nodeNum != 0 {
 
 	}
@@ -82,7 +82,7 @@ func main() {
 	if config.PyrConf.Enable == true {
 		cnt++
 	}
-	if config.SpiConf.Enable == true {
+	if config.FideConf.Enable == true {
 		cnt++
 	}
 	if config.RelayConf.Enable == true {

@@ -1,4 +1,4 @@
-package Spiral
+package Monosulfide
 
 import (
 	"blockEmulator/Block"
@@ -16,11 +16,11 @@ var GlobalShards []*Shard
 type Shard struct {
 	NodeMap     map[string]*idChain.Node
 	GlobalState map[string]Tx.Account
-	Chain       *SpiChain
+	Chain       *MonosulfideChain
 	rwLock      sync.RWMutex
 	Id          int
 	mainNode    *idChain.Node
-	tempBlock   *Block.SpiralBlock
+	tempBlock   *Block.FideBlock
 }
 
 func (sh *Shard) Main() *idChain.Node {
@@ -37,7 +37,7 @@ func (sh *Shard) ProcessingBlock() Block.Block {
 }
 
 func (sh *Shard) SetProcessingBlock(block Block.Block) {
-	sh.tempBlock = block.(*Block.SpiralBlock)
+	sh.tempBlock = block.(*Block.FideBlock)
 }
 
 func (sh *Shard) GetViewId() uint64 {
@@ -56,7 +56,7 @@ func (sh *Shard) Addr() string {
 }
 
 func (sh *Shard) Append(block Block.Block) {
-	if b, ok := block.(*Block.SpiralBlock); ok {
+	if b, ok := block.(*Block.FideBlock); ok {
 		sh.Chain.Append(b)
 	} else {
 		log.Panic()
@@ -82,7 +82,7 @@ func (sh *Shard) NodeAmount() int {
 	return len(sh.NodeMap)
 }
 
-func NewSpiralShard(shardId uint64) *Shard {
+func NewFideShard(shardId uint64) *Shard {
 	ret := &Shard{
 		NodeMap:     nil,
 		GlobalState: nil,
@@ -90,7 +90,7 @@ func NewSpiralShard(shardId uint64) *Shard {
 		rwLock:      sync.RWMutex{},
 		Id:          int(shardId),
 	}
-	ret.Chain = NewSpiChain(ret)
+	ret.Chain = NewFideChain(ret)
 	return ret
 }
 

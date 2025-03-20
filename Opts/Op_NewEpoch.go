@@ -4,9 +4,9 @@ import (
 	"blockEmulator/AutoTx"
 	"blockEmulator/Block"
 	"blockEmulator/Interfaces"
+	"blockEmulator/Monosulfide"
 	"blockEmulator/Proposals"
 	"blockEmulator/Relay"
-	"blockEmulator/Spiral"
 	"blockEmulator/config"
 	"blockEmulator/crypt"
 	"blockEmulator/idChain"
@@ -84,8 +84,8 @@ func EpochInit() {
 	timeStamp := time.Now()
 	if config.PyrConf.Enable == true {
 		RefreshShard()
-	} else if config.SpiConf.Enable == true {
-		RefreshSpiralShard()
+	} else if config.FideConf.Enable == true {
+		RefreshFideShard()
 	} else if config.RelayConf.Enable == true {
 		RefreshRelayShard()
 	}
@@ -107,7 +107,7 @@ func RefreshRelayShard() {
 	shardAmount := config.RelayConf.ShardAmount
 
 	shardMaps := make([]map[string]*idChain.Node, shardAmount)
-	Relay.GlobalShards = make([]*Relay.Shard, config.SpiConf.ShardAmount)
+	Relay.GlobalShards = make([]*Relay.Shard, config.FideConf.ShardAmount)
 	// init shards
 	for i := 0; i < shardAmount; i++ {
 		shardMaps[i] = make(map[string]*idChain.Node)
@@ -162,14 +162,14 @@ func RefreshRelayShard() {
 
 }
 
-func RefreshSpiralShard() {
-	shardAmount := config.SpiConf.ShardAmount
+func RefreshFideShard() {
+	shardAmount := config.FideConf.ShardAmount
 	shardMaps := make([]map[string]*idChain.Node, shardAmount)
-	Spiral.GlobalShards = make([]*Spiral.Shard, config.SpiConf.ShardAmount)
+	Monosulfide.GlobalShards = make([]*Monosulfide.Shard, config.FideConf.ShardAmount)
 	// init shards
 	for i := 0; i < shardAmount; i++ {
 		shardMaps[i] = make(map[string]*idChain.Node)
-		Spiral.GlobalShards[i] = Spiral.NewSpiralShard(uint64(i))
+		Monosulfide.GlobalShards[i] = Monosulfide.NewFideShard(uint64(i))
 	}
 
 	// assign nodes to shards.
@@ -183,8 +183,8 @@ func RefreshSpiralShard() {
 		shardMaps[shardId][strPubKey] = node
 	}
 	currShardId := idChain.IDC.NodeMap[idChain.RunningNode.StrKey()].ShardID
-	Spiral.LocalShard = Spiral.GlobalShards[currShardId]
-	Spiral.LocalShard.Chain.EnableStorage(idChain.RunningNode.Port())
+	Monosulfide.LocalShard = Monosulfide.GlobalShards[currShardId]
+	Monosulfide.LocalShard.Chain.EnableStorage(idChain.RunningNode.Port())
 
 	// selecting main node in each shard
 	for i := 0; i < shardAmount; i++ {
@@ -192,24 +192,24 @@ func RefreshSpiralShard() {
 			log.Println("WARNING::not enough nodes.")
 			continue
 		}
-		shardI := Spiral.GlobalShards[i]
+		shardI := Monosulfide.GlobalShards[i]
 		shardI.NodeMap = shardMaps[i]
 		shardI.SelectMainNode()
 	}
 
-	Interfaces.Con[config.SpiMod].SetDomain(Spiral.LocalShard)
+	Interfaces.Con[config.FideMod].SetDomain(Monosulfide.LocalShard)
 	log.Printf("Nodes in shard(%v):", currShardId)
-	for _, node := range Spiral.GlobalShards[currShardId].NodeMap {
+	for _, node := range Monosulfide.GlobalShards[currShardId].NodeMap {
 		log.Printf("\t%v\n", node.IpAddr)
 	}
 
 	log.Printf("Main node in shard is %v, threshold = %v",
-		Spiral.LocalShard.Main().IpAddr,
-		Interfaces.Con[config.SpiMod].GetDomain().Threshold(),
+		Monosulfide.LocalShard.Main().IpAddr,
+		Interfaces.Con[config.FideMod].GetDomain().Threshold(),
 	)
 
 	Interfaces.Communications[Interfaces.Ping].Request() // connect to other nodes .
-	AutoTx.Manager = AutoTx.NewTxManager(Spiral.LocalShard.Chain.TxPool)
+	AutoTx.Manager = AutoTx.NewTxManager(Monosulfide.LocalShard.Chain.TxPool)
 }
 
 func RefreshShard() {

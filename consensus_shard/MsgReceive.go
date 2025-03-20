@@ -4,7 +4,7 @@ import (
 	"blockEmulator/AutoTx"
 	"blockEmulator/Comm"
 	"blockEmulator/Interfaces"
-	"blockEmulator/Spiral"
+	"blockEmulator/Monosulfide"
 	"blockEmulator/Tx"
 	"blockEmulator/config"
 	"blockEmulator/consensus_shard/pbft"
@@ -49,8 +49,9 @@ func Selector() {
 				launch.ClearMsgBuffer()
 				continue
 			}
+
 			commType := Interfaces.ComTypes[msgType]
-			// if Comm obj is deployed, its msgType will be record and be able to be recognized.
+			// if Comm obj is deployed, its msgType will be record and be able to be recognized here.
 			if commType != "" {
 				if Interfaces.IsReq(msgType) {
 					Interfaces.Communications[commType].HandleRequest(msg)
@@ -59,19 +60,20 @@ func Selector() {
 				}
 				continue
 			}
+
 			success := false
 			if state > 0 {
 				if msgType == message.SendTxs {
 					AutoTx.Manager.HandleSendTxs(msg)
 					success = true
 				} else if msgType == message.TxEOF {
-					if config.SpiConf.Enable {
+					if config.FideConf.Enable {
 						config.ManagerFinished = true
 						fmt.Println("_________TX-FINISH_________")
 						if config.EnableDT {
 							config.NDelay = config.DT[int(idChain.RunningNode.ShardID)]
 						}
-						if idChain.RunningNode == Spiral.LocalShard.Main() {
+						if idChain.RunningNode == Monosulfide.LocalShard.Main() {
 							Interfaces.Communications[Interfaces.MainBegin].Request()
 						}
 						success = true

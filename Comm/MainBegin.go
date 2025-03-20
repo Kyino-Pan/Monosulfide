@@ -2,7 +2,7 @@ package Comm
 
 import (
 	"blockEmulator/Interfaces"
-	"blockEmulator/Spiral"
+	"blockEmulator/Monosulfide"
 	"blockEmulator/config"
 	"blockEmulator/message"
 	"sync"
@@ -22,8 +22,8 @@ func (com *MainBeginCom) Type() Interfaces.CommType {
 func (com *MainBeginCom) Request(...*[]byte) bool {
 	com.lock.Lock()
 	defer com.lock.Unlock()
-	if config.SpiConf.Enable {
-		for _, sh := range Spiral.GlobalShards {
+	if config.FideConf.Enable {
+		for _, sh := range Monosulfide.GlobalShards {
 			com.con.SendMsg(&message.Message{
 				Type:       com.Type().RequestType(),
 				Content:    nil,
@@ -39,9 +39,9 @@ func (com *MainBeginCom) HandleRequest(*message.Message) bool {
 	com.lock.Lock()
 	defer com.lock.Unlock()
 	com.cnt++
-	if com.cnt == config.SpiConf.ShardAmount {
-		Interfaces.Con[config.SpiMod].EnablePropose()
-		go Interfaces.Operations[message.SpiralTx].Propose()
+	if com.cnt == config.FideConf.ShardAmount {
+		Interfaces.Con[config.FideMod].EnablePropose()
+		go Interfaces.Operations[message.FideTx].Propose()
 		config.TxBegin = time.Now()
 		config.CalcComm = true
 	}

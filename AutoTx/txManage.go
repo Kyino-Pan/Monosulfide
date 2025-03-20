@@ -1,7 +1,7 @@
 package AutoTx
 
 import (
-	"blockEmulator/Spiral"
+	"blockEmulator/Monosulfide"
 	"blockEmulator/Tx"
 	"blockEmulator/config"
 	"blockEmulator/idChain"
@@ -36,8 +36,8 @@ func NewTxManager(pool *Tx.Pool) *TxManager {
 	}
 	if config.PyrConf.Enable {
 		ret.shardAmount = config.PyrConf.ShardAmount
-	} else if config.SpiConf.Enable {
-		ret.shardAmount = config.SpiConf.ShardAmount
+	} else if config.FideConf.Enable {
+		ret.shardAmount = config.FideConf.ShardAmount
 	} else {
 		ret.shardAmount = 1
 		log.Printf("WARNING::Tx injector initaled without config")
@@ -132,10 +132,10 @@ func (tm *TxManager) SendTxs(txsInShard map[int][]*Tx.Transaction) {
 					RemoteInfo: remoteAddr,
 				})
 			}
-		} else if config.SpiConf.Enable {
-			for _, node := range Spiral.GlobalShards[shardId].NodeMap {
+		} else if config.FideConf.Enable {
+			for _, node := range Monosulfide.GlobalShards[shardId].NodeMap {
 				remoteAddr := node.IpAddr
-				launch.LaunchSpiMsg(&message.Message{
+				launch.LaunchFideMsg(&message.Message{
 					Type:       message.SendTxs,
 					Content:    *content,
 					RemoteInfo: remoteAddr,
@@ -156,12 +156,12 @@ func (tm *TxManager) HandleSendTxs(msg *message.Message) {
 			}
 		}
 	}
-	if config.SpiConf.Enable {
-		for Spiral.GlobalShards == nil {
+	if config.FideConf.Enable {
+		for Monosulfide.GlobalShards == nil {
 			time.Sleep(100 * time.Millisecond)
 			cnt++
 			if cnt >= 32 {
-				log.Panic("HandleSendTxs::no spiral shard")
+				log.Panic("HandleSendTxs::no Fide shard")
 			}
 		}
 	}
@@ -174,7 +174,7 @@ func (tm *TxManager) HandleSendTxs(msg *message.Message) {
 }
 
 func (tm *TxManager) SendEOF() {
-	if config.PyrConf.Enable || config.SpiConf.Enable {
+	if config.PyrConf.Enable || config.FideConf.Enable {
 		for _, node := range idChain.IDC.NodeMap {
 			launch.LaunchIdMsg(&message.Message{
 				Type:       message.TxEOF,

@@ -10,6 +10,8 @@ import (
 	"log"
 )
 
+// Reply is only used as a debug tool currently.
+
 func (con *ConPbft) NewReplyMessage(seq uint64, result bool) *message.Message {
 	reply := message.Reply{
 		MessageID: seq,
@@ -76,11 +78,11 @@ func (con *ConPbft) HandleReply(msg *message.Message) {
 	}
 	if threshold <= successCnt {
 		con.isReply[seq] = true
-		log.Printf("----Primary %v Reply round %d executing \n", con.ModId, con.seq())
+		log.Printf("----Primary %v Reply round %d executing \n", con.id, con.seq())
 		con.Execute(con.proposalPool[seq])
 		con.nxtSeq()
 
-		log.Printf("----Primary %v round %v begin------", con.ModId, con.seq())
+		log.Printf("----Primary %v round %v begin------", con.id, con.seq())
 		//con.seqLock.Unlock()
 		go launch.ClearMsgBuffer()
 		if idChain.RunningNode != con.GetDomain().Main() { // may change status after executing

@@ -2,7 +2,7 @@ package Comm
 
 import (
 	"blockEmulator/Interfaces"
-	"blockEmulator/Spiral"
+	"blockEmulator/Monosulfide"
 	"blockEmulator/config"
 	"blockEmulator/idChain"
 	"blockEmulator/message"
@@ -20,11 +20,11 @@ type FinishCom struct {
 }
 
 func (com *FinishCom) Request(...*[]byte) bool {
-	if config.SpiConf.Enable {
-		chain := Spiral.LocalShard.Chain
+	if config.FideConf.Enable {
+		chain := Monosulfide.LocalShard.Chain
 		content :=
 			message.NewByteContent(chain.EncodedExp()).
-				AppendStrContent(strconv.Itoa(Spiral.LocalShard.Id))
+				AppendStrContent(strconv.Itoa(Monosulfide.LocalShard.Id))
 		com.con.SendMsg(&message.Message{
 			Type:       Interfaces.Finish.RequestType(),
 			Content:    *content,
@@ -36,8 +36,8 @@ func (com *FinishCom) Request(...*[]byte) bool {
 }
 
 func (com *FinishCom) HandleRequest(msg *message.Message) bool {
-	if config.SpiConf.Enable {
-		exp := new(Spiral.Record)
+	if config.FideConf.Enable {
+		exp := new(Monosulfide.Record)
 		contents := msg.GetContents()
 		err := json.Unmarshal(contents[0], exp)
 		if err != nil {

@@ -99,7 +99,7 @@ func (cw *CsvWriter) Run() *CsvWriter {
 
 func Merge() error {
 	i := 0
-	outputFile := config.OutputPath + "Spiral-Result" + time.Now().Format("15:04:05") + ".csv"
+	outputFile := config.OutputPath + "Fide-Result" + time.Now().Format("15:04:05") + ".csv"
 	// 创建或打开最终输出文件
 	f, err := os.OpenFile(outputFile, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
@@ -108,7 +108,7 @@ func Merge() error {
 	defer f.Close()
 	// 开始循环，直到没有更多的文件
 	for {
-		inputFile := fmt.Sprintf("%sSpiral-Result-%d.csv", config.OutputPath, i)
+		inputFile := fmt.Sprintf("%sFide-Result-%d.csv", config.OutputPath, i)
 		_, err := os.Stat(inputFile)
 
 		// 如果文件不存在，则退出循环

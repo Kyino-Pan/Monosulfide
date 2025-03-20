@@ -108,8 +108,8 @@ func (con *ConPbft) HandleCommitMsgs() {
 			} else {
 				con.EnablePropose()
 			}
-			//log.Printf("---------Mode %v Round %v Begin-----------", con.ModId, con.seq())
-			storage.CommLogger.Writef("%v Round %v begin", con.ModId, con.seq())
+			//log.Printf("---------Mode %v Round %v Begin-----------", con.id, con.seq())
+			storage.CommLogger.Writef("%v Round %v begin", con.id, con.seq())
 			return
 		}
 	}

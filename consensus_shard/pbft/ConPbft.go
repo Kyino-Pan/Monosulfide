@@ -12,15 +12,14 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"log"
-	"strconv"
 	"sync"
 	"time"
 )
 
 const (
-	IdMod  = config.IdMod
-	PyrMod = config.PyrMod
-	SpiMod = config.SpiMod
+	IdMod   = config.IdMod
+	PyrMod  = config.PyrMod
+	FideMod = config.FideMod
 )
 
 var (
@@ -54,11 +53,15 @@ type ConPbft struct {
 	printFlag       bool
 	ProposalTimeCtr time.Time
 	domain          Interfaces.Domain
-	ModId           int // is used to verify the pbft belongs to which party.
+	id              int // is used to verify the pbft belongs to which party.
 	sequence        uint64
 	manLock         sync.Mutex
 	manCond         *sync.Cond
 	Zilean          map[string]time.Time
+}
+
+func (con *ConPbft) Id() int {
+	return con.id
 }
 
 func (con *ConPbft) HandleMsg(msg *message.Message) bool {
@@ -122,7 +125,7 @@ func NewIdChainCon() *ConPbft {
 	//ret.Communications[HeartBeat] = ret.NewHeartBeatCom()
 	ret.domain = idChain.IDC
 	ret.printFlag = false
-	ret.ModId = config.IdMod
+	ret.id = config.IdMod
 	return ret
 }
 
@@ -131,15 +134,15 @@ func NewPyramidCon() *ConPbft {
 	ret.legalNodesAddr = config.PyrRunningAddr
 	// register Operations here
 	ret.printFlag = false
-	ret.ModId = config.PyrMod
+	ret.id = config.PyrMod
 	return ret
 }
 
-func NewSpiBehavior() Interfaces.Consensus {
+func NewFideBehavior() Interfaces.Consensus {
 	ret := NewPbftConsensus()
-	ret.legalNodesAddr = config.SpiRunningAddr
+	ret.legalNodesAddr = config.FideRunningAddr
 	ret.printFlag = false
-	ret.ModId = config.SpiMod
+	ret.id = config.FideMod
 	return ret
 }
 
@@ -194,8 +197,7 @@ func (con *ConPbft) HandleNodeSilence(msg *message.Message) {
 }
 
 func (con *ConPbft) SendMsg(m *message.Message) {
-	(*message.Content)(&m.Content).Sign(idChain.RunningNode.StrKey()).Sign(strconv.Itoa(con.ModId))
-	launch.LaunchPool <- m
+	launch.SendMsg(con, m)
 }
 
 func (con *ConPbft) PrepareTempChainInfo() {
@@ -246,5 +248,5 @@ func Init() {
 	idChain.Init(launch.Listener.GetListenPort())
 	Interfaces.Con[IdMod] = NewIdChainCon()
 	Interfaces.Con[PyrMod] = NewPyramidCon()
-	Interfaces.Con[SpiMod] = NewSpiBehavior()
+	Interfaces.Con[FideMod] = NewFideBehavior()
 }

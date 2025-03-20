@@ -19,14 +19,11 @@ func Run(mod uint64) {
 	pbft.Init()
 	Comm.Init()
 	Opts.Init()
-	go consensus_shard.Selector()
-	//go pyramidNode.PryCommunicating()
-	go test.Trigger()
-	go launch.Listener.Hearing()
-	//go pyramidNode.TcpListen()
+	go consensus_shard.Selector() // Core logic loop
+	go test.Trigger()             // Propose Begin
+	go launch.Listener.Hearing()  //
 	go killerTicker()
 	NodeKiller()
-	//go networks.NetTester()
 }
 
 func killerTicker() {

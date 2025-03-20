@@ -18,6 +18,19 @@ func (con *ConPbft) Propose(reqType message.RequestType, vars ...*[]byte) {
 	go con.innerPropose()
 }
 
+func Propose(con Interfaces.Consensus, reqType message.RequestType, vars ...*[]byte) {
+	con.GetProposalBuffer().Push(&Proposals.Proposal{
+		ReqType: reqType,
+		Vars:    vars,
+	})
+	//log.Printf("%v add to proBuffer, remaining %v", reqType, con.GetProposalBuffer().Amount())
+	if c, ok := con.(*ConPbft); ok {
+		go c.innerPropose()
+	} else {
+		panic("implement")
+	}
+}
+
 var cnt = 0
 
 func (con *ConPbft) innerPropose() {
@@ -36,12 +49,10 @@ func (con *ConPbft) innerPropose() {
 		return
 	}
 	proType, proVars := pro.Get()
-	con.ProposalTimeCtr = time.Now() // record time
 	preSuccess := Interfaces.Operations[proType].PrepareAfterLock(proVars)
 	if !preSuccess {
 		log.Printf("----Propose(%v) :%v prepare failed----", con.seq(), proType)
 		con.EnablePropose()
-
 		return
 	}
 	request := con.NewPrePrepareMsg(con.seq(), proType, proVars...)

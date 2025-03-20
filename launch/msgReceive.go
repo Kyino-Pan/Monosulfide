@@ -1,7 +1,7 @@
 package launch
 
 import (
-	"blockEmulator/Spiral"
+	"blockEmulator/Monosulfide"
 	"blockEmulator/config"
 	"blockEmulator/message"
 	"blockEmulator/networks"
@@ -106,8 +106,8 @@ func handleRequest(conn *networks.TcpConn) {
 		if err != nil {
 			if err == io.EOF {
 				log.Println("handler::client closed")
-				if config.SpiConf.Enable {
-					Spiral.LocalShard.Chain.Save()
+				if config.FideConf.Enable {
+					Monosulfide.LocalShard.Chain.Save()
 					config.STOPPER <- true
 					//todo
 					// this is not safe, just a temporary method.
@@ -133,8 +133,8 @@ func handleRequest(conn *networks.TcpConn) {
 		if err != nil {
 			if err == io.EOF {
 				log.Printf("handler::client closed")
-				if config.SpiConf.Enable {
-					Spiral.LocalShard.Chain.Save()
+				if config.FideConf.Enable {
+					Monosulfide.LocalShard.Chain.Save()
 					config.STOPPER <- true
 				}
 				return

@@ -25,7 +25,7 @@ func Init() {
 		Deploy(new(CrossReplyCom))
 	}
 
-	if config.SpiConf.Enable {
+	if config.FideConf.Enable {
 		Deploy(new(SyncSBlockCom))
 		Deploy(new(MainBeginCom))
 		Deploy(new(PingCom))

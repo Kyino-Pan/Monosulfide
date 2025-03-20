@@ -21,8 +21,8 @@ func NewTxPool(localIndex int) *Pool {
 	var amount = 0
 	if config.PyrConf.Enable {
 		amount = config.PyrConf.ShardAmount
-	} else if config.SpiConf.Enable {
-		amount = config.SpiConf.ShardAmount
+	} else if config.FideConf.Enable {
+		amount = config.FideConf.ShardAmount
 	} else {
 		amount = 1
 		log.Printf("WARNING::Pool is set without config")
@@ -67,7 +67,7 @@ func (pool *Pool) Append(tx *Transaction) {
 			list := pool.TxLists[s][r]
 			list.append(tx)
 		}
-	} else if config.SpiConf.Enable {
+	} else if config.FideConf.Enable {
 		list := pool.TxLists[s][r]
 		list.append(tx)
 	}
@@ -90,7 +90,7 @@ func (pool *Pool) PackageInnerTxs() []*Transaction {
 func (pool *Pool) PackageRelayTxs() [][]*Transaction {
 	pool.lock.RLock()
 	defer pool.lock.RUnlock()
-	var candidateGroups = make([][]*Transaction, config.SpiConf.ShardAmount)
+	var candidateGroups = make([][]*Transaction, config.FideConf.ShardAmount)
 	remain := 0
 	for dest, list := range pool.TxLists[pool.localIndex] {
 		// 遍历从本地发出的交易
@@ -103,7 +103,7 @@ func (pool *Pool) PackageRelayTxs() [][]*Transaction {
 	}
 
 	// 使用轮询方式从各候选组中选取交易，保证分布均匀
-	var transactions = make([][]*Transaction, config.SpiConf.ShardAmount)
+	var transactions = make([][]*Transaction, config.FideConf.ShardAmount)
 	cnt := 0
 	round := 0
 	for cnt < config.BlockSize {
