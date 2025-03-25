@@ -22,6 +22,7 @@ func originBlock(shardId int) Block.Block {
 		MerkleRoot:   Tx.GenTxRoot(nil),
 		StateRoot:    GlobalPyrShards[shardId].GenStateRoot(),
 		Nonce:        0,
+		Timestamp:    time.Now(),
 	}
 	ret.H.ParentHashes[shardId] = idChain.IDC.Chain.TopBlock().Hash()
 	return ret

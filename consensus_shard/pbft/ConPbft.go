@@ -81,11 +81,11 @@ func (con *ConPbft) HandleMsg(msg *message.Message) bool {
 	return true
 }
 
-func (con *ConPbft) EnablePropose() {
+func (con *ConPbft) Enable() {
 	con.proposeLock.Unlock()
 }
 
-func (con *ConPbft) DisablePropose() {
+func (con *ConPbft) Disable() {
 	con.proposeLock.Lock()
 }
 
@@ -119,9 +119,6 @@ func NewPbftConsensus() *ConPbft {
 func NewIdChainCon() *ConPbft {
 	ret := NewPbftConsensus()
 	ret.legalNodesAddr = config.IdLegalAddr
-	// register Operations here
-
-	//ret.Communications[HeartBeat] = ret.NewHeartBeatCom()
 	ret.domain = idChain.IDC
 	ret.printFlag = false
 	ret.id = config.IdMod
@@ -131,7 +128,6 @@ func NewIdChainCon() *ConPbft {
 func NewPyramidCon() *ConPbft {
 	ret := NewPbftConsensus()
 	ret.legalNodesAddr = config.PyrRunningAddr
-	// register Operations here
 	ret.printFlag = false
 	ret.id = config.PyrMod
 	return ret

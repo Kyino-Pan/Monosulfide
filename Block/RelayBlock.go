@@ -20,7 +20,7 @@ type (
 		ParentHash      crypt.Hash // 上一区块Hash
 		ConfirmedTxRoot []byte     // 片内交易的MerkleRoot
 		OutTxRoot       []byte
-		Time            time.Time
+		Timestamp       time.Time
 	}
 	RelayBody struct {
 		Intra []*Tx.Transaction
@@ -28,13 +28,17 @@ type (
 	}
 )
 
+func (head *RelayHead) Time() time.Time {
+	return head.Timestamp
+}
+
 func _emptyRelayBlock() Block {
 	return &RelayBlock{
 		H: &RelayHead{
 			ParentHash:      *crypt.EmptyHash(),
 			ConfirmedTxRoot: nil,
 			OutTxRoot:       nil,
-			Time:            time.Now(),
+			Timestamp:       time.Now(),
 		},
 		B: &RelayBody{
 			Intra: nil,

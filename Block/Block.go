@@ -3,6 +3,7 @@ package Block
 import (
 	"blockEmulator/Tx"
 	"blockEmulator/crypt"
+	"time"
 )
 
 type (
@@ -18,6 +19,7 @@ type (
 	Head interface {
 		EncodeH() []byte
 		TxRoot() []byte
+		Time() time.Time
 	}
 	Body interface {
 		EncodeB() []byte

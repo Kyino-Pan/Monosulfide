@@ -14,8 +14,8 @@ type Consensus interface {
 	SetDomain(Domain)
 	Tic()
 	Tok() time.Duration // should return duration since the latest Tic()
-	EnablePropose()
-	DisablePropose()
+	Enable()
+	Disable()
 	HandleMsg(*message.Message) bool
 	Id() int
 }

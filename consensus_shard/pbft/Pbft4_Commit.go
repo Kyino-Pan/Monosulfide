@@ -106,7 +106,7 @@ func (con *ConPbft) HandleCommitMsgs() {
 					con.HandlePrePrepare(msg)
 				}
 			} else {
-				con.EnablePropose()
+				con.Enable()
 			}
 			//log.Printf("---------Mode %v Round %v Begin-----------", con.id, con.seq())
 			storage.CommLogger.Writef("%v Round %v begin", con.id, con.seq())

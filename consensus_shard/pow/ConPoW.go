@@ -3,9 +3,10 @@ package pow
 import (
 	"blockEmulator/Interfaces"
 	"blockEmulator/Proposals"
+	"blockEmulator/config"
+	"blockEmulator/idChain"
 	"blockEmulator/launch"
 	"blockEmulator/message"
-	"crypto/sha256"
 	"log"
 	"math/big"
 	"sync"
@@ -24,21 +25,24 @@ type NakamotoPoW struct {
 }
 
 func NewPoWConsensus() *NakamotoPoW {
-	initDiffStr := "00000000FFFF0000000000000000000000000000000000000000000000000000"
-	initDifficulty, ok := new(big.Int).SetString(initDiffStr, 16)
-	if !ok {
-		panic("解析初始难度失败")
-	}
 	ret := &NakamotoPoW{
 		proposalBuffer: Proposals.NewProposalBuffer(),
-		difficulty:     initDifficulty,
-		ExpTime:        32 * time.Minute,
+		difficulty:     config.IdConfig.Difficulty, // 是同一个对象
+		ExpTime:        1 * time.Minute,
 		lastUpdateTime: time.Now(),
 	}
+	ret.Disable()
 	return ret
 }
 
-func (con *NakamotoPoW) _updateDifficulty(bTime time.Time) {
+func NewIdChainCon() *NakamotoPoW {
+	ret := NewPoWConsensus()
+	ret.id = config.IdMod
+	ret.domain = idChain.IDC
+	return ret
+}
+
+func (con *NakamotoPoW) UpdateDifficulty(bTime time.Time) {
 	// 计算上次更新以来经过的时间
 	elapsed := bTime.Sub(con.lastUpdateTime)
 
@@ -49,7 +53,7 @@ func (con *NakamotoPoW) _updateDifficulty(bTime time.Time) {
 	// 计算新的 difficulty（目标值）： newDifficulty = oldDifficulty * elapsed / ExpTime
 	newDifficulty := new(big.Int).Mul(con.difficulty, elapsedInt)
 	newDifficulty.Div(newDifficulty, expInt)
-
+	log.Printf("difficulty %v update to %v", con.difficulty.String(), newDifficulty.String())
 	con.difficulty = newDifficulty
 	con.lastUpdateTime = bTime
 	return
@@ -74,10 +78,10 @@ func (con *NakamotoPoW) SendMsg(message *message.Message) {
 
 func (con *NakamotoPoW) Propose() {
 	// critical section
-	con.DisablePropose()
+	con.Disable()
 	pro := con.GetProposalBuffer().Pop()
 	if pro == nil {
-		con.EnablePropose()
+		con.Enable()
 		time.Sleep(250 * time.Millisecond)
 		go con.Propose()
 		return
@@ -86,11 +90,12 @@ func (con *NakamotoPoW) Propose() {
 	preSuccess := Interfaces.Operations[proType].PrepareAfterLock(proVars)
 	if !preSuccess {
 		log.Printf("----Propose(%v) : prepare failed----", proType)
-		con.EnablePropose()
+		con.Enable()
 		return
 	}
 	content := message.NewStrContent(proType.String()).AppendByteContent(proVars...).Bytes()
 	Interfaces.Communications[Interfaces.PoWBroadcast].Request(content)
+	con.Enable()
 }
 
 func (con *NakamotoPoW) GetProposalBuffer() *Proposals.ProposalBuffer {
@@ -113,26 +118,10 @@ func (con *NakamotoPoW) Tok() time.Duration {
 	panic("PoW does not require Tic & Tok")
 }
 
-func (con *NakamotoPoW) EnablePropose() {
+func (con *NakamotoPoW) Enable() {
 	con.proposeLock.Unlock()
 }
 
-func (con *NakamotoPoW) DisablePropose() {
+func (con *NakamotoPoW) Disable() {
 	con.proposeLock.Lock()
 }
-
-func doubleSHA256(blockHeaderBytes []byte) [32]byte {
-	firstHash := sha256.Sum256(blockHeaderBytes)
-	secondHash := sha256.Sum256(firstHash[:])
-	return secondHash
-}
-
-func isValidBlock(blockHeaderBytes []byte, target *big.Int) bool {
-	hash := doubleSHA256(blockHeaderBytes)
-	// 将哈希值转换为大整数（注意：比特币中的哈希通常以小端格式存储，转换时要留意字节顺序）
-	hashInt := new(big.Int).SetBytes(hash[:])
-	// 比较计算结果和目标值
-	return hashInt.Cmp(target) < 0
-}
-
-var pow Interfaces.Consensus = &NakamotoPoW{}

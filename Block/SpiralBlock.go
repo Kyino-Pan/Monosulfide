@@ -21,7 +21,7 @@ type (
 		IntraTxRoot  []byte     // 片内交易的MerkleRoot
 		SubBlockRoot []byte     // 子Cross块的MerkleRoot
 		StateRoot    []byte
-		Time         time.Time
+		Timestamp    time.Time
 	}
 	FideBody struct {
 		Intra     []*Tx.Transaction
@@ -39,6 +39,10 @@ type (
 		Txs []*Tx.Transaction
 	}
 )
+
+func (head *FideHead) Time() time.Time {
+	return head.Timestamp
+}
 
 func (block *FideBlock) Light() Block {
 	block.B.Intra = nil
@@ -124,7 +128,7 @@ func _emptyFideBlock() Block {
 			IntraTxRoot:  nil,
 			SubBlockRoot: nil,
 			StateRoot:    nil,
-			Time:         time.Now(),
+			Timestamp:    time.Now(),
 		},
 		B: &FideBody{
 			Intra:     nil,

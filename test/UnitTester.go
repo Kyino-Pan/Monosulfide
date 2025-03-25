@@ -12,8 +12,7 @@ func Trigger() {
 	time.Sleep(time.Second * 2) // waiting for main node init.
 	if launch.Listener.GetListenPort() == config.ListenPort {
 		//go NetTester()
-		delay := config.InitDelay
-		time.Sleep(delay)
+		time.Sleep(config.InitDelay)
 		Interfaces.Operations[message.NewEpoch].Propose()
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"blockEmulator/Tx"
 	"blockEmulator/config"
 	"blockEmulator/consensus_shard/pbft"
+	"blockEmulator/consensus_shard/pow"
 	"blockEmulator/idChain"
 	"blockEmulator/launch"
 	"blockEmulator/message"
@@ -25,7 +26,7 @@ func Selector() {
 	Interfaces.Communications[Comm.Register].Request()
 	if idChain.RunningNode == idChain.IDC.Main() {
 		state++
-		Interfaces.Con[pbft.IdMod].EnablePropose()
+		Interfaces.Con[pbft.IdMod].Enable()
 	}
 	for {
 		select {
@@ -96,7 +97,11 @@ func Selector() {
 
 func Init() {
 	idChain.Init(launch.Listener.GetListenPort())
-	Interfaces.Con[config.IdMod] = pbft.NewIdChainCon()
+	if config.IdConfig.UsingPoW {
+		Interfaces.Con[config.IdMod] = pow.NewIdChainCon()
+	} else if config.IdConfig.UsingPBFT {
+		Interfaces.Con[config.IdMod] = pbft.NewIdChainCon()
+	}
 	Interfaces.Con[config.PyrMod] = pbft.NewPyramidCon()
 	Interfaces.Con[config.FideMod] = pbft.NewFideBehavior()
 }

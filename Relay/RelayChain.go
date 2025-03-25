@@ -52,7 +52,7 @@ func (ch *Chain) GenerateBlock() Block.Block {
 			ParentHash:      ch.TopBlockHash[ch.Id()],
 			ConfirmedTxRoot: Tx.GenTxRoot(IntraTxs),
 			OutTxRoot:       Tx.GenTxRoot(OutTxs),
-			Time:            time.Time{},
+			Timestamp:       time.Time{},
 		},
 		B: &Block.RelayBody{
 			Intra: IntraTxs,

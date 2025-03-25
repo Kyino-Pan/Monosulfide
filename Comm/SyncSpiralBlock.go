@@ -93,7 +93,7 @@ func (com *SyncSBlockCom) HandleRequest(msg *message.Message) bool {
 		block, _ := b.(*Block.FideBlock)
 		nonce = block.Nonce()
 		if localChain.Blocks[block.Hash()] != nil {
-			log.Printf("Got an existing block from shard%v, time = %v", RemoteSID, block.H.Time.String())
+			log.Printf("Got an existing block from shard%v, time = %v", RemoteSID, block.Head().Time().String())
 			hash = block.Hash()
 			com.blocks[RemoteSID][hash] = block
 		} else {

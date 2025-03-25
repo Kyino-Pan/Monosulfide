@@ -64,7 +64,7 @@ func (com *ViewChangeCom) HandleRequest(msg *message.Message) bool {
 					RemoteInfo: com.con.GetDomain().Addr(),
 				})
 				com.change(vid)
-				com.con.EnablePropose()
+				com.con.Enable()
 			} else {
 				if com.responseBuffer[vid] == idChain.IDC.Main().StrKey() {
 					com.change(vid)

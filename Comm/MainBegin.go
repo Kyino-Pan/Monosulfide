@@ -40,7 +40,7 @@ func (com *MainBeginCom) HandleRequest(*message.Message) bool {
 	defer com.lock.Unlock()
 	com.cnt++
 	if com.cnt == config.FideConf.ShardAmount {
-		Interfaces.Con[config.FideMod].EnablePropose()
+		Interfaces.Con[config.FideMod].Enable()
 		go Interfaces.Operations[message.FideTx].Propose()
 		config.TxBegin = time.Now()
 		config.CalcComm = true

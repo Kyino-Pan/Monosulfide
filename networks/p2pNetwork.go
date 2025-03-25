@@ -6,7 +6,6 @@ import (
 	"blockEmulator/config"
 	"blockEmulator/message"
 	"encoding/binary"
-	"fmt"
 	"log"
 	"net"
 	"sync"
@@ -62,7 +61,7 @@ func Connect(addr string) (*TcpConn, error) {
 			}
 			break
 		}
-		fmt.Printf("Conn amount = %v\n", len(connectionPool))
+		//fmt.Printf("Conn amount = %v\n", len(connectionPool))
 	}
 	tc = connectionPool[addr]
 	return tc, nil

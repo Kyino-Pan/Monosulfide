@@ -70,6 +70,9 @@ func (pool *Pool) Append(tx *Transaction) {
 	} else if config.FideConf.Enable {
 		list := pool.TxLists[s][r]
 		list.append(tx)
+	} else {
+		list := pool.TxLists[s][r]
+		list.append(tx)
 	}
 }
 

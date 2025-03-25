@@ -96,7 +96,7 @@ func (mc *MonosulfideChain) GenerateBlock() Block.Block {
 			IntraTxRoot:  Tx.GenTxRoot(blockBody.Txs()),
 			SubBlockRoot: Tx.GenMPTRoot(subHashes),
 			StateRoot:    nil, //todo
-			Time:         time.Now(),
+			Timestamp:    time.Now(),
 		},
 		B: blockBody,
 	}
@@ -116,7 +116,7 @@ func (mc *MonosulfideChain) Append(block *Block.FideBlock) {
 	var closeProcess = false
 	//mc.TxPool.Print()
 	isLegal := mc.VerifyBlock(block)
-	tBegin := block.H.Time
+	tBegin := block.Head().Time()
 	if isLegal {
 		if block.B.SubBlocks[mc.Id()].CHead == nil {
 			// 本shard发布的块
@@ -349,7 +349,7 @@ func (mc *MonosulfideChain) recordCBlock(sid int, block *Block.FideBlock) {
 //	sc.blockAck[sid][ackId][hash] += 1
 //	if sc.blockAck[sid][hash] == config.FideConf.Threshold {
 //		block := sc.blockBuffer[sid][hash]
-//		tBegin := block.H.Time
+//		tBegin := block.H.Timestamp
 //		if sid == sc.Id() {
 //			// 执行本shard的转出确认
 //			for sid, b := range block.B.SubBlocks {

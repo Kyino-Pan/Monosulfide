@@ -8,6 +8,7 @@ import (
 	"blockEmulator/Proposals"
 	"blockEmulator/Relay"
 	"blockEmulator/config"
+	"blockEmulator/consensus_shard/pow"
 	"blockEmulator/crypt"
 	"blockEmulator/idChain"
 	"blockEmulator/launch"
@@ -42,6 +43,11 @@ func (op *NewEpochOpt) PrepareAfterLock(vars []*[]byte) bool {
 	random := rand.Uint64()
 	randByte := crypt.UintToBytes(random)
 	newBlock := idChain.IDC.Chain.GenerateIdBlock(randByte)
+	if config.IdConfig.UsingPoW {
+		for !crypt.IsValidBlock(newBlock.Head().EncodeH(), config.IdConfig.Difficulty) {
+			newBlock = idChain.IDC.Chain.GenerateIdBlock(randByte)
+		}
+	}
 	byteBlock := newBlock.Encode()
 	vars[0] = &byteBlock
 	op.Verify(Interfaces.TransVars(vars))
@@ -54,7 +60,7 @@ func (op *NewEpochOpt) Verify(vars [][]byte) bool {
 		op.block = block
 		return true
 	}
-	result := idChain.IDC.Chain.Verify(block) //todo
+	result := idChain.IDC.Chain.Verify(block)
 	if result == true {
 		op.block = block
 		for _, tx := range block.Body().Txs() {
@@ -73,6 +79,11 @@ func (op *NewEpochOpt) Verify(vars [][]byte) bool {
 func (op *NewEpochOpt) Execute() {
 	timeStamp := time.Now()
 	idChain.IDC.Append(op.block)
+	if config.IdConfig.UsingPoW {
+		if op.block.Nonce()%config.IdConfig.UpdatePeriod == config.IdConfig.UpdatePeriod-1 {
+			Interfaces.Con[config.IdMod].(*pow.NakamotoPoW).UpdateDifficulty(op.block.Head().Time())
+		}
+	}
 	//idChain.RunningNode = idChain.IDC.NodeMap[idChain.RunningNode.StrKey()] // refresh self status
 	idChain.RunningNode.PrintNode()
 	EpochInit()
@@ -82,14 +93,18 @@ func (op *NewEpochOpt) Execute() {
 
 func EpochInit() {
 	timeStamp := time.Now()
+	inited := false
 	if config.PyrConf.Enable == true {
 		RefreshShard()
+		inited = true
 	} else if config.FideConf.Enable == true {
 		RefreshFideShard()
+		inited = true
 	} else if config.RelayConf.Enable == true {
 		RefreshRelayShard()
+		inited = true
 	}
-	if idChain.IsIdMainNode() {
+	if idChain.IsIdMainNode() && inited {
 		log.Println("Start packaging txs")
 		go AutoTx.Manager.MsgSendingControl()
 	}
@@ -156,7 +171,7 @@ func RefreshRelayShard() {
 		go storage.StateLogger.Run()
 		storage.StateLogger.Writef("%v", idChain.RunningNode.IpAddr)
 
-		Interfaces.Con[config.RelayMod].EnablePropose()
+		Interfaces.Con[config.RelayMod].Enable()
 		go Interfaces.Operations[message.RelayTx].Propose()
 	}
 
@@ -257,7 +272,7 @@ func RefreshShard() {
 
 	if pyramid.IsPyrMainNode() {
 		storage.StateLogger.Writef("%v", idChain.RunningNode.IpAddr)
-		Interfaces.Con[config.PyrMod].EnablePropose()
+		Interfaces.Con[config.PyrMod].Enable()
 		go Interfaces.Operations[message.InternalTx].Propose()
 		if pyramid.LocalShard.IsBShard() {
 			go NxtCrossTx()
@@ -266,8 +281,14 @@ func RefreshShard() {
 }
 
 func EpochCountDown(t time.Duration) {
-	time.Sleep(t)
-	if idChain.IsIdMainNode() {
+	if config.IdConfig.UsingPBFT {
+		time.Sleep(t)
+		if idChain.IsIdMainNode() {
+			Interfaces.Operations[message.NewEpoch].Propose()
+		}
+	}
+	if config.IdConfig.UsingPoW {
 		Interfaces.Operations[message.NewEpoch].Propose()
+		log.Printf("Mining on &%v", idChain.IDC.Chain.TopBlock().Hash().String())
 	}
 }

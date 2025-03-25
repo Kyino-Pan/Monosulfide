@@ -9,7 +9,7 @@ const ClassRelay = false
 
 func InitFideConfig() *FideConfig {
 	return &FideConfig{
-		Enable:      true,
+		Enable:      false,
 		ShardAmount: FideShardAmount,
 		Threshold:   FideShardAmount - (FideShardAmount+2)/3 + 1,
 	}

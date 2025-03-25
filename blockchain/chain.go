@@ -3,6 +3,7 @@ package blockchain
 import (
 	"blockEmulator/Block"
 	"blockEmulator/Tx"
+	"blockEmulator/config"
 	"blockEmulator/crypt"
 	"blockEmulator/storage"
 	"bytes"
@@ -36,13 +37,17 @@ func (c *Chain) RecordTx(tx *Tx.Transaction) {
 func (c *Chain) GenerateIdBlock(randNum *[]byte) Block.Block {
 	InnerTxs := c.TxPool.PackageInnerTxs()
 	if len(InnerTxs) < 1 {
-		time.Sleep(10 * time.Millisecond)
+		//time.Sleep(10 * time.Millisecond)
 		InnerTxs = c.TxPool.PackageInnerTxs()
 	}
 	head := &Block.StdHead{
 		ParentHashes: make(map[int]crypt.Hash),
 		MerkleRoot:   Tx.GenTxRoot(InnerTxs),
 		Nonce:        c.Blocks[c.TopBlockHash[c.Id()]].Nonce() + 1,
+		Timestamp:    time.Now(),
+	}
+	if config.IdConfig.UsingPoW {
+		head.Bits = crypt.BigToCompact(config.IdConfig.Difficulty)
 	}
 	head.ParentHashes[c.Id()] = c.TopBlockHash[c.Id()]
 	body := &Block.StdBody{
@@ -53,6 +58,7 @@ func (c *Chain) GenerateIdBlock(randNum *[]byte) Block.Block {
 	block := new(Block.StdBlock).Init(head, body)
 	return block
 }
+
 func (c *Chain) Append(block Block.Block) {
 	//block.print()
 	Txs := block.Body().Txs()
@@ -114,7 +120,7 @@ func (c *Chain) GetBlocks() []Block.Block {
 			break
 		}
 		// 处理区块的逻辑（例如打印区块信息）
-		fmt.Printf("区块编号: %d, 区块哈希: %v, 交易数量：%v\n", block.Nonce(), block.Hash().Bytes(), len(block.Body().Txs()))
+		fmt.Printf("区块%d, 交易数量：%v\n", block.Nonce(), len(block.Body().Txs()))
 		// 如果当前区块是创世区块，其父哈希可能为零
 		blocks = append(blocks, block)
 		if b, ok := block.(*Block.StdBlock); ok {
@@ -132,7 +138,9 @@ func (c *Chain) GetBlocks() []Block.Block {
 }
 
 func (c *Chain) Verify(block Block.Block) bool {
-	// todo
+	if config.IdConfig.UsingPoW {
+		return crypt.IsValidBlock(block.Head().EncodeH(), config.IdConfig.Difficulty)
+	}
 	return true
 }
 

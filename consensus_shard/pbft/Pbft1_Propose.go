@@ -8,10 +8,10 @@ import (
 
 func (con *ConPbft) Propose() {
 	// critical section
-	con.DisablePropose()
+	con.Disable()
 	pro := con.GetProposalBuffer().Pop()
 	if pro == nil {
-		con.EnablePropose()
+		con.Enable()
 		time.Sleep(250 * time.Millisecond)
 		go con.Propose()
 		return
@@ -20,7 +20,7 @@ func (con *ConPbft) Propose() {
 	preSuccess := Interfaces.Operations[proType].PrepareAfterLock(proVars)
 	if !preSuccess {
 		log.Printf("----Propose(%v) :%v prepare failed----", con.seq(), proType)
-		con.EnablePropose()
+		con.Enable()
 		return
 	}
 	request := con.NewPrePrepareMsg(con.seq(), proType, proVars...)
