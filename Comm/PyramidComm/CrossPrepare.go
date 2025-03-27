@@ -1,4 +1,4 @@
-package Comm
+package PyramidComm
 
 import (
 	"blockEmulator/Block"
@@ -51,7 +51,7 @@ func (com *CrossPrepareCom) HandleRequest(msg *message.Message) bool {
 	block := new(Block.StdBlock).Decode(contents[1])
 	suc := pyramid.LocalShard.Chain.VerifyBlock(block)
 	if suc {
-		Interfaces.Operations[message.IShardPrepare].Propose(&contents[1])
+		Interfaces.Operations[message.IShardPrepare].Schedule(&contents[1])
 	} else {
 		log.Println("CrossPrepare:: failed")
 		com.Response(&config.FailByte)
@@ -86,13 +86,13 @@ func (com *CrossPrepareCom) HandleResponse(msg *message.Message) {
 	log.Printf("From shard%v, Cross Prepare(%v/%v)", remoteShardId, len(com.acks), len(pyramid.LocalShard.RelatedIShard))
 	if len(com.acks) == len(pyramid.LocalShard.RelatedIShard) {
 		com.acks = make(map[int]bool)
-		Interfaces.Operations[message.CrossCommit].Propose()
+		Interfaces.Operations[message.CrossCommit].Schedule()
 	}
 	return
 }
 
-func (com *CrossPrepareCom) Reset() Interfaces.CommType {
-	com.con = Interfaces.Con[config.PyrMod]
+func (com *CrossPrepareCom) Reset(con Interfaces.Consensus) Interfaces.CommType {
+	com.con = con
 	com.acks = make(map[int]bool)
 	return com.Type()
 }

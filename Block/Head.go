@@ -17,6 +17,10 @@ type StdHead struct {
 	Bits         uint32
 }
 
+func (bh *StdHead) GetNonce() uint64 {
+	return bh.Nonce
+}
+
 func (bh *StdHead) Time() time.Time {
 	return bh.Timestamp
 }

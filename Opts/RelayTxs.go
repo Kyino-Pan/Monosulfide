@@ -21,19 +21,19 @@ func (op *RelayTxOpt) Reset(con Interfaces.Consensus) message.RequestType {
 	return message.RelayTx
 }
 
-func (op *RelayTxOpt) Propose(...*[]byte) {
+func (op *RelayTxOpt) Schedule(...*[]byte) {
 	byteArray := new([]byte)
-	log.Printf("Propose")
+	log.Printf("Schedule")
 	//pyramid.LocalShard.WaitForRelayTxs()
 	Propose(op.con, message.RelayTx, byteArray)
 }
 
-func (op *RelayTxOpt) PrepareAfterLock(vars []*[]byte) bool {
+func (op *RelayTxOpt) Prepare(vars []*[]byte) bool {
 	shard := Relay.LocalShard
 	op.tempBlock = shard.Chain.GenerateBlock()
 	if op.tempBlock == nil {
 		// generate failed.
-		Interfaces.Operations[message.RelayTx].Propose()
+		Interfaces.Operations[message.RelayTx].Schedule()
 		return false
 	}
 	byteBlock := op.tempBlock.Encode()
@@ -64,7 +64,7 @@ func (op *RelayTxOpt) Execute() {
 	shard.Append(op.tempBlock)
 	//shard.Unlock()
 	if Relay.LocalShard.Main() == idChain.RunningNode {
-		Interfaces.Operations[message.RelayTx].Propose()
+		Interfaces.Operations[message.RelayTx].Schedule()
 	}
 	return
 }

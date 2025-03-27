@@ -2,7 +2,6 @@ package Comm
 
 import (
 	"blockEmulator/Interfaces"
-	"blockEmulator/config"
 	"blockEmulator/crypt"
 	"blockEmulator/idChain"
 	"blockEmulator/message"
@@ -15,6 +14,7 @@ const (
 	collecting = "collecting"
 )
 
+// ViewChangeCom is only used to support PbftConsensus.
 type ViewChangeCom struct {
 	con            Interfaces.Consensus
 	count          map[uint64]map[string]bool
@@ -104,8 +104,8 @@ func (com *ViewChangeCom) change(vid uint64) {
 	com.con.Tic()
 }
 
-func (com *ViewChangeCom) Reset() Interfaces.CommType {
-	com.con = Interfaces.Con[config.IdMod]
+func (com *ViewChangeCom) Reset(con Interfaces.Consensus) Interfaces.CommType {
+	com.con = con
 	com.count = make(map[uint64]map[string]bool)
 	com.state = standBy
 	com.responseBuffer = make(map[uint64]string)

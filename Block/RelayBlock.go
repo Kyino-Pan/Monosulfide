@@ -28,6 +28,10 @@ type (
 	}
 )
 
+func (head *RelayHead) GetNonce() uint64 {
+	return head.Nonce
+}
+
 func (head *RelayHead) Time() time.Time {
 	return head.Timestamp
 }

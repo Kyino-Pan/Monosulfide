@@ -5,7 +5,6 @@ import (
 	"blockEmulator/crypt"
 	"bytes"
 	"encoding/gob"
-	"fmt"
 	"log"
 	"time"
 )
@@ -39,6 +38,10 @@ type (
 		Txs []*Tx.Transaction
 	}
 )
+
+func (head *FideHead) GetNonce() uint64 {
+	return head.Nonce
+}
 
 func (head *FideHead) Time() time.Time {
 	return head.Timestamp
@@ -76,7 +79,7 @@ func (head *FideHead) ParentHashes() map[int]crypt.Hash {
 }
 
 func (block *FideBlock) Nonce() uint64 {
-	return block.H.Nonce
+	return block.H.GetNonce()
 }
 
 func (sBody FideBody) EncodeB() []byte {
@@ -139,28 +142,6 @@ func _emptyFideBlock() Block {
 
 func (block *FideBlock) Hash() crypt.Hash {
 	return *crypt.NewHash(crypt.GetDigest(block.H))
-}
-
-func (block *FideBlock) Print() {
-	h := block.H
-	fmt.Println("--head--")
-	fmt.Println(h.Nonce)
-	fmt.Println(h.ParentHash.Bytes())
-	fmt.Println(h.Time)
-	fmt.Println("--body--")
-	b := block.B
-	fmt.Println("\t--sub block--")
-	for i, s := range b.SubBlocks {
-		fmt.Printf("\t--%v", i)
-		fmt.Print("\t")
-		fmt.Println(s.CHead != nil)
-		fmt.Print("\t\t")
-		fmt.Println(s.CBody != nil)
-	}
-	fmt.Println("--")
-	fmt.Println(b.Intra != nil)
-	fmt.Println("------")
-	time.Sleep(40 * time.Millisecond)
 }
 
 func EmptySubBlock() *SubBlock {

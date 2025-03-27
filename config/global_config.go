@@ -1,17 +1,20 @@
 package config
 
-import "time"
+import (
+	"time"
+)
 
 const (
-	InjectSpeed   = 2048  // the transaction inject speed（per message)
-	TotalDataSize = 30000 // the total number of txs
-	BlockSize     = 2048
-	BatchSize     = 16000 // supervisor read a batch of txs then send them, it should be larger than inject speed
+	Pbft = 0
+	PoW  = 1
 
-	EpochTime        = time.Duration(999999) * time.Millisecond // ms
-	InitDelay        = time.Duration(2) * time.Second           // s
-	TxInjectInterval = 50 * time.Millisecond
-	ExitDelay        = time.Duration(3) * time.Second
+	ClassicRely = 1000
+	Pyramid     = 1001
+	UniRelay    = 1002
+)
+
+const (
+	ExitDelay = time.Duration(3) * time.Second
 
 	ViewChangeTime   = 80000                                      //ms
 	FileInput        = `../2000000to2999999_BlockTransaction.csv` //the raw BlockTransaction data path
@@ -42,8 +45,12 @@ const (
 )
 
 var (
-	SuccessByte     = []byte("successByte")
-	FailByte        = []byte("failByte")
 	ManagerFinished = false
 	STOPPER         = make(chan bool, 1)
+	SuccessByte     = []byte("successByte")
+	FailByte        = []byte("failByte")
 )
+
+func Init() {
+
+}

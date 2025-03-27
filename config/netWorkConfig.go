@@ -2,13 +2,6 @@ package config
 
 import "time"
 
-const (
-	Debugging        = false
-	DebugNodeAtShard = 0
-	DebugIsMainNode  = false
-	TPS_TEST         = false
-)
-
 // 流量计算
 var (
 	CalcComm = false
@@ -18,8 +11,9 @@ var (
 
 // 网络延迟配置
 var (
+	// NDelay 在DT未配置时的默认网络延迟时间
 	NDelay   = time.Duration(0) * time.Millisecond // ms
-	DT       = make(map[int]time.Duration)
+	DT       = make(map[int]time.Duration)         // DT[i]为shard i的延迟时间
 	EnableDT = true
 )
 

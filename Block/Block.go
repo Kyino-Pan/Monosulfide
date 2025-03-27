@@ -13,13 +13,13 @@ type (
 		Encode() []byte
 		Decode([]byte) Block
 		Hash() crypt.Hash
-		Nonce() uint64
 		Light() Block
 	}
 	Head interface {
 		EncodeH() []byte
 		TxRoot() []byte
 		Time() time.Time
+		GetNonce() uint64
 	}
 	Body interface {
 		EncodeB() []byte

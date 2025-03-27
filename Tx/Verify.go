@@ -11,7 +11,7 @@ import (
 	"math/big"
 )
 
-// 假设账户结构包含余额、Nonce
+// 假设账户结构包含余额、GetNonce
 type Account struct {
 	Balance *big.Int
 	Nonce   uint64
@@ -82,7 +82,7 @@ func writeAccountToTrie(trie *trie.Trie, accAddr []byte, acct *Account) error {
 	return err
 }
 
-// CheckNonce 用于检查发送方交易的 Nonce 是否符合预期
+// CheckNonce 用于检查发送方交易的 GetNonce 是否符合预期
 func CheckNonce(acct *Account, txNonce uint64) error {
 	if txNonce != acct.Nonce {
 		return fmt.Errorf("nonce mismatch: expected=%d, got=%d", acct.Nonce, txNonce)

@@ -16,11 +16,11 @@ type AppendCBlockOpt struct {
 	lock sync.Mutex
 }
 
-func (op *AppendCBlockOpt) Propose(vars ...*[]byte) {
+func (op *AppendCBlockOpt) Schedule(vars ...*[]byte) {
 	Propose(op.con, message.AppendCBlock, vars...)
 	return
 }
-func (op *AppendCBlockOpt) PrepareAfterLock([]*[]byte) bool {
+func (op *AppendCBlockOpt) Prepare([]*[]byte) bool {
 	return true
 }
 

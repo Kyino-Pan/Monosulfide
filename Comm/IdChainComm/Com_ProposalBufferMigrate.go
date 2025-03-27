@@ -1,10 +1,9 @@
-package Comm
+package IdChainComm
 
 import (
 	"blockEmulator/Interfaces"
 	"blockEmulator/Opts"
 	"blockEmulator/Proposals"
-	"blockEmulator/config"
 	"blockEmulator/crypt"
 	"blockEmulator/idChain"
 	"blockEmulator/message"
@@ -19,8 +18,8 @@ func (com *MigrateProCom) Type() Interfaces.CommType {
 	return Interfaces.MigratePro
 }
 
-func (com *MigrateProCom) Reset() Interfaces.CommType {
-	com.con = Interfaces.Con[config.IdMod]
+func (com *MigrateProCom) Reset(con Interfaces.Consensus) Interfaces.CommType {
+	com.con = con
 	return com.Type()
 }
 

@@ -21,18 +21,18 @@ func (op *FideTxOpt) Reset(con Interfaces.Consensus) message.RequestType {
 	return message.FideTx
 }
 
-func (op *FideTxOpt) Propose(...*[]byte) {
+func (op *FideTxOpt) Schedule(...*[]byte) {
 	byteArray := new([]byte)
 	//pyramid.LocalShard.WaitForFideTxs()
 	Propose(op.con, message.FideTx, byteArray)
 }
 
-func (op *FideTxOpt) PrepareAfterLock(vars []*[]byte) bool {
+func (op *FideTxOpt) Prepare(vars []*[]byte) bool {
 	shard := Monosulfide.LocalShard
 	op.tempBlock = shard.Chain.GenerateBlock()
 	if op.tempBlock == nil {
 		// generate failed.
-		Interfaces.Operations[message.FideTx].Propose()
+		Interfaces.Operations[message.FideTx].Schedule()
 		return false
 	}
 	byteBlock := op.tempBlock.Encode()
@@ -63,7 +63,7 @@ func (op *FideTxOpt) Execute() {
 	shard.Append(op.tempBlock)
 	//shard.Unlock()
 	if Monosulfide.LocalShard.Main() == idChain.RunningNode {
-		Interfaces.Operations[message.FideTx].Propose()
+		Interfaces.Operations[message.FideTx].Schedule()
 	}
 	return
 }

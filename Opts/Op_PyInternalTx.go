@@ -19,18 +19,18 @@ func (op *InternalTxOpt) Reset(con Interfaces.Consensus) message.RequestType {
 	return message.InternalTx
 }
 
-func (op *InternalTxOpt) Propose(...*[]byte) {
+func (op *InternalTxOpt) Schedule(...*[]byte) {
 	byteArray := new([]byte)
 	time.Sleep(1 * time.Second)
 	Propose(op.con, message.InternalTx, byteArray)
 }
 
-func (op *InternalTxOpt) PrepareAfterLock(vars []*[]byte) bool {
+func (op *InternalTxOpt) Prepare(vars []*[]byte) bool {
 	shard := pyramid.LocalShard
 	tempBlock := shard.Chain.GenerateInternalBlock()
 	if tempBlock == nil {
 		// generate failed.
-		Interfaces.Operations[message.InternalTx].Propose()
+		Interfaces.Operations[message.InternalTx].Schedule()
 		return false
 	}
 	byteBlock := tempBlock.Encode()
@@ -59,7 +59,7 @@ func (op *InternalTxOpt) Execute() {
 	shard.Append(shard.ProcessingBlock())
 	shard.SetProcessingBlock(nil)
 	if pyramid.IsPyrMainNode() {
-		Interfaces.Operations[message.InternalTx].Propose()
+		Interfaces.Operations[message.InternalTx].Schedule()
 	}
 	return
 }

@@ -45,7 +45,7 @@ func NewTxManager(pool *Tx.Pool) *TxManager {
 	return ret
 }
 
-// read transactions, the Nonce of the transactions is - batchDataAmount
+// read transactions, the GetNonce of the transactions is - batchDataAmount
 func (tm *TxManager) MsgSendingControl() {
 	txFile, err := os.Open(config.FileInput)
 	if err != nil {

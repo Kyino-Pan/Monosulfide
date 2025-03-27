@@ -2,7 +2,6 @@ package consensus_shard
 
 import (
 	"blockEmulator/AutoTx"
-	"blockEmulator/Comm"
 	"blockEmulator/Interfaces"
 	"blockEmulator/Monosulfide"
 	"blockEmulator/Tx"
@@ -23,7 +22,7 @@ var state = 0
 
 func Selector() {
 	timeStamp := time.Now()
-	Interfaces.Communications[Comm.Register].Request()
+	Interfaces.Communications[Interfaces.Register].Request()
 	if idChain.RunningNode == idChain.IDC.Main() {
 		state++
 		Interfaces.Con[pbft.IdMod].Enable()
@@ -33,16 +32,19 @@ func Selector() {
 		case msg := <-launch.BCMsgPool:
 			modeStr := (*message.Content)(&msg.Content).CheckSign()
 			remoteId := (*message.Content)(&msg.Content).CheckSign()
-			msg.RemoteInfo = remoteId
+
+			msg.RemoteInfo = remoteId // replace field with message sender's pubKey
+
 			mode, _ := strconv.Atoi(modeStr)
 			Con := Interfaces.Con[mode]
 			if msg.Type != Tx.SendTxs {
 				storage.CommLogger.Writef("record::%v", msg.Type)
 			}
+
 			msgType := msg.Type
-			if msgType == Comm.Register.ResponseType() {
+			if msgType == Interfaces.Register.ResponseType() {
 				// Uninitialized nodes will run at this brunch
-				Interfaces.Communications[Comm.Register].HandleResponse(msg)
+				Interfaces.Communications[Interfaces.Register].HandleResponse(msg)
 				state++ // todo
 				// this is a bug. But convenient.
 				// Con.Communications[IdInit].Request()
@@ -97,9 +99,9 @@ func Selector() {
 
 func Init() {
 	idChain.Init(launch.Listener.GetListenPort())
-	if config.IdConfig.UsingPoW {
+	if config.IdConfig.UsingPoW() {
 		Interfaces.Con[config.IdMod] = pow.NewIdChainCon()
-	} else if config.IdConfig.UsingPBFT {
+	} else if config.IdConfig.UsingPbft() {
 		Interfaces.Con[config.IdMod] = pbft.NewIdChainCon()
 	}
 	Interfaces.Con[config.PyrMod] = pbft.NewPyramidCon()

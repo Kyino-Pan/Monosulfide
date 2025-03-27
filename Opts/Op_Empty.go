@@ -18,11 +18,11 @@ func (op *EmptyOpt) Reset(con Interfaces.Consensus) message.RequestType {
 	return message.Empty
 }
 
-func (op *EmptyOpt) Propose(...*[]byte) {
+func (op *EmptyOpt) Schedule(...*[]byte) {
 	Propose(op.con, message.Empty)
-	//Interfaces.Propose(op.con,Empty, newBlock.EncodeH())
+	//Interfaces.Schedule(op.con,Empty, newBlock.EncodeH())
 }
-func (op *EmptyOpt) PrepareAfterLock([]*[]byte) bool {
+func (op *EmptyOpt) Prepare([]*[]byte) bool {
 	return true
 }
 

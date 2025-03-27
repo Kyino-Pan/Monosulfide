@@ -186,7 +186,7 @@ func (con *ConPbft) HandleNodeSilence(msg *message.Message) {
 		node.Silence += 1
 		print(node.Silence)
 		if node.Silence >= idChain.IDC.Threshold() {
-			Interfaces.Operations[message.RemoveNode].Propose(&contents[0])
+			Interfaces.Operations[message.RemoveNode].Schedule(&contents[0])
 		}
 	}
 }

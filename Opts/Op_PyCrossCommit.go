@@ -14,11 +14,11 @@ type CrossCommitOpt struct {
 	con Interfaces.Consensus
 }
 
-func (op *CrossCommitOpt) Propose(vars ...*[]byte) {
+func (op *CrossCommitOpt) Schedule(vars ...*[]byte) {
 	// vars=[[seq]]
 	Propose(op.con, message.CrossCommit, vars...)
 }
-func (op *CrossCommitOpt) PrepareAfterLock([]*[]byte) bool {
+func (op *CrossCommitOpt) Prepare([]*[]byte) bool {
 	return true
 }
 

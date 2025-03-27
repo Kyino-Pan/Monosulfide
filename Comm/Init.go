@@ -1,33 +1,40 @@
 package Comm
 
 import (
+	"blockEmulator/Comm/IdChainComm"
+	"blockEmulator/Comm/MonosulfideComm"
+	"blockEmulator/Comm/PyramidComm"
 	"blockEmulator/Interfaces"
 	"blockEmulator/config"
 )
 
-func Deploy(com Interfaces.Communication) {
-	comType := com.Reset()
+func Deploy(com Interfaces.Communication, con Interfaces.Consensus) {
+	comType := com.Reset(con)
 	Interfaces.ComTypes[comType.RequestType()] = comType
 	Interfaces.ComTypes[comType.ResponseType()] = comType
 	Interfaces.Communications[comType] = com
 }
 
 func Init() {
-	Deploy(new(RegisterCom))
-	Deploy(new(RegisterBroadCom))
-	Deploy(new(ViewChangeCom))
-	Deploy(new(MigrateProCom))
+	id := Interfaces.Con[config.IdMod]
+	Deploy(new(IdChainComm.RegisterCom), id)
+	Deploy(new(IdChainComm.RegisterBroadCom), id)
+	Deploy(new(ViewChangeCom), id)
+	Deploy(new(IdChainComm.MigrateProCom), id)
+	Deploy(new(PoWBroadcastCom), id)
+
 	if config.PyrConf.Enable {
-		Deploy(new(SyncIBlockCom))
-		Deploy(new(CrossLockCom))
-		Deploy(new(CrossPrepareCom))
-		Deploy(new(CrossReplyCom))
+		pyr := Interfaces.Con[config.PyrMod]
+		Deploy(new(PyramidComm.SyncIBlockCom), pyr)
+		Deploy(new(PyramidComm.CrossLockCom), pyr)
+		Deploy(new(PyramidComm.CrossPrepareCom), pyr)
+		Deploy(new(PyramidComm.CrossReplyCom), pyr)
 	}
 
 	if config.FideConf.Enable {
-		Deploy(new(SyncSBlockCom))
-		Deploy(new(MainBeginCom))
-		Deploy(new(PingCom))
+		monosulfide := Interfaces.Con[config.FideMod]
+		Deploy(new(MonosulfideComm.SyncSBlockCom), monosulfide)
+		Deploy(new(MainBeginCom), monosulfide)
+		Deploy(new(PingCom), monosulfide)
 	}
-	Deploy(new(PoWBroadcastCom))
 }

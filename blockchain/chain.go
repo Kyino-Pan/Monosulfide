@@ -43,11 +43,11 @@ func (c *Chain) GenerateIdBlock(randNum *[]byte) Block.Block {
 	head := &Block.StdHead{
 		ParentHashes: make(map[int]crypt.Hash),
 		MerkleRoot:   Tx.GenTxRoot(InnerTxs),
-		Nonce:        c.Blocks[c.TopBlockHash[c.Id()]].Nonce() + 1,
+		Nonce:        c.Blocks[c.TopBlockHash[c.Id()]].Head().GetNonce() + 1,
 		Timestamp:    time.Now(),
 	}
-	if config.IdConfig.UsingPoW {
-		head.Bits = crypt.BigToCompact(config.IdConfig.Difficulty)
+	if config.IdConfig.UsingPoW() {
+		head.Bits = crypt.BigToCompact(config.IdConfig.PowConf.Difficulty)
 	}
 	head.ParentHashes[c.Id()] = c.TopBlockHash[c.Id()]
 	body := &Block.StdBody{
@@ -120,7 +120,7 @@ func (c *Chain) GetBlocks() []Block.Block {
 			break
 		}
 		// 处理区块的逻辑（例如打印区块信息）
-		fmt.Printf("区块%d, 交易数量：%v\n", block.Nonce(), len(block.Body().Txs()))
+		fmt.Printf("区块%d, 交易数量：%v\n", block.Head().GetNonce(), len(block.Body().Txs()))
 		// 如果当前区块是创世区块，其父哈希可能为零
 		blocks = append(blocks, block)
 		if b, ok := block.(*Block.StdBlock); ok {
@@ -138,8 +138,9 @@ func (c *Chain) GetBlocks() []Block.Block {
 }
 
 func (c *Chain) Verify(block Block.Block) bool {
-	if config.IdConfig.UsingPoW {
-		return crypt.IsValidBlock(block.Head().EncodeH(), config.IdConfig.Difficulty)
+	if config.IdConfig.UsingPoW() {
+		return crypt.IsValidBlock(block.Head().EncodeH(),
+			config.IdConfig.PowConf.Difficulty)
 	}
 	return true
 }

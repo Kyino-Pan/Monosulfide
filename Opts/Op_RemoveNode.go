@@ -18,10 +18,10 @@ func (op *RemoveNodeOpt) Reset(con Interfaces.Consensus) message.RequestType {
 	return message.RemoveNode
 }
 
-func (op *RemoveNodeOpt) Propose(vars ...*[]byte) {
+func (op *RemoveNodeOpt) Schedule(vars ...*[]byte) {
 	Propose(op.con, message.RemoveNode, vars...)
 }
-func (op *RemoveNodeOpt) PrepareAfterLock([]*[]byte) bool {
+func (op *RemoveNodeOpt) Prepare([]*[]byte) bool {
 	return true
 }
 

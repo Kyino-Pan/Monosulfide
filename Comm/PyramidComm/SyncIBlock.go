@@ -1,9 +1,8 @@
-package Comm
+package PyramidComm
 
 import (
 	"blockEmulator/Block"
 	"blockEmulator/Interfaces"
-	"blockEmulator/config"
 	"blockEmulator/crypt"
 	"blockEmulator/idChain"
 	"blockEmulator/message"
@@ -72,7 +71,7 @@ func (com *SyncIBlockCom) HandleRequest(msg *message.Message) bool {
 		block, _ := b.(*Block.StdBlock)
 		//blockLen = len(block.StdBody().Transactions)
 		if localChain.Blocks[block.Hash()] != nil {
-			log.Printf("Got an existing block from shard%v, hash = ", RemoteSID, len(localChain.Blocks[block.Hash()].Body().Txs()))
+			log.Printf("Got an existing block from shard%v, hash = %v", RemoteSID, len(localChain.Blocks[block.Hash()].Body().Txs()))
 			hash = block.Hash()
 			com.blocks[RemoteSID][hash] = block
 		} else {
@@ -131,8 +130,8 @@ func (com *SyncIBlockCom) Response(...*[]byte) bool {
 func (com *SyncIBlockCom) HandleResponse(*message.Message) {
 }
 
-func (com *SyncIBlockCom) Reset() Interfaces.CommType {
-	com.con = Interfaces.Con[config.PyrMod]
+func (com *SyncIBlockCom) Reset(con Interfaces.Consensus) Interfaces.CommType {
+	com.con = con
 	com.reqCnt = make(map[int]map[crypt.Hash]uint64)
 	com.blocks = make(map[int]map[crypt.Hash]Block.Block)
 	com.finish = make(map[int]map[crypt.Hash]bool)

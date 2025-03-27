@@ -1,29 +1,23 @@
 package config
 
-import (
-	"math/big"
-	"strings"
-)
-
-type IDChainConfig struct {
-	UsingPBFT    bool
-	UsingPoW     bool
-	Difficulty   *big.Int
-	UpdatePeriod uint64
+type IdChainConfig struct {
+	IntraConsensus int
+	PowConf        *PoWConfig
 }
 
-var IdConfig = NewIDChainConfig()
+func (c IdChainConfig) UsingPoW() bool {
+	return c.IntraConsensus == PoW
+}
+func (c IdChainConfig) UsingPbft() bool {
+	return c.IntraConsensus == Pbft
+}
 
-func NewIDChainConfig() *IDChainConfig {
-	initDiffStr := "000004" + strings.Repeat("0", 58)
-	initDifficulty, ok := new(big.Int).SetString(initDiffStr, 16)
-	if !ok {
-		panic("解析初始难度失败")
+var IdConfig = NewIdChainConfig()
+
+func NewIdChainConfig() *IdChainConfig {
+	ret := &IdChainConfig{
+		IntraConsensus: IdChainConsensus,
+		PowConf:        new(PoWConfig).Default(),
 	}
-	return &IDChainConfig{
-		Difficulty:   initDifficulty,
-		UsingPBFT:    false,
-		UsingPoW:     true,
-		UpdatePeriod: 8, // 每UpdatePeriod个块更新一次diff
-	}
+	return ret
 }

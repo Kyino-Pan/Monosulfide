@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// MainBeginCom is used to sync the nodes at the beginning of the tx consensus.
 type MainBeginCom struct {
 	con  Interfaces.Consensus
 	cnt  int
@@ -41,7 +42,7 @@ func (com *MainBeginCom) HandleRequest(*message.Message) bool {
 	com.cnt++
 	if com.cnt == config.FideConf.ShardAmount {
 		Interfaces.Con[config.FideMod].Enable()
-		go Interfaces.Operations[message.FideTx].Propose()
+		go Interfaces.Operations[message.FideTx].Schedule()
 		config.TxBegin = time.Now()
 		config.CalcComm = true
 	}
@@ -55,8 +56,8 @@ func (com *MainBeginCom) Response(...*[]byte) bool {
 func (com *MainBeginCom) HandleResponse(*message.Message) {
 }
 
-func (com *MainBeginCom) Reset() Interfaces.CommType {
-	com.con = Interfaces.Con[config.PyrMod]
+func (com *MainBeginCom) Reset(con Interfaces.Consensus) Interfaces.CommType {
+	com.con = con
 	com.cnt = 0
 	return com.Type()
 }

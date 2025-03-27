@@ -14,13 +14,14 @@ import (
 	"time"
 )
 
-func Run(uint64) {
+func Run() {
 	launch.TcpListen()
 	consensus_shard.Init()
 	Comm.Init()
 	Opts.Init()
+
 	go consensus_shard.Selector() // Core logic loop
-	go Trigger()                  // Propose Begin
+	go Trigger()                  // Schedule Begin
 	go launch.Listener.Hearing()  //
 	go killerTicker()
 	NodeKiller()
@@ -56,6 +57,6 @@ func Trigger() {
 	if launch.Listener.GetListenPort() == config.ListenPort {
 		//go NetTester()
 		time.Sleep(config.InitDelay)
-		Interfaces.Operations[message.NewEpoch].Propose()
+		Interfaces.Operations[message.NewEpoch].Schedule()
 	}
 }

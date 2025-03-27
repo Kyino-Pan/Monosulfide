@@ -1,4 +1,4 @@
-package Comm
+package PyramidComm
 
 import (
 	"blockEmulator/Interfaces"
@@ -40,12 +40,12 @@ func (com *CrossLockCom) Type() Interfaces.CommType {
 // b-request -> i-handleReq -> i-request -> b-handleRequest ->
 // b-response -> i-handleResponse -> i-response -> b-handleResponse
 
-func (com *CrossLockCom) Reset() Interfaces.CommType {
+func (com *CrossLockCom) Reset(con Interfaces.Consensus) Interfaces.CommType {
 	com.activating = false
 	com.acks = make(map[int]bool)
 	com.comCond = sync.NewCond(&com.comLock)
 	com.sleepT = config.SleepMin
-	com.con = Interfaces.Con[config.PyrMod]
+	com.con = con
 	return com.Type()
 }
 
@@ -88,7 +88,7 @@ func (com *CrossLockCom) Request(vars ...*[]byte) bool {
 			com.BlockInner()
 			com.Response(&config.SuccessByte)
 			com.wait()
-			Interfaces.Operations[message.CrossPrePre].Propose()
+			Interfaces.Operations[message.CrossPrePre].Schedule()
 			storage.StateLogger.Writef("Lock success")
 		} else {
 			com.Response(&config.FailByte)

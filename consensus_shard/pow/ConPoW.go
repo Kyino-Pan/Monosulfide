@@ -1,6 +1,7 @@
 package pow
 
 import (
+	"blockEmulator/Block"
 	"blockEmulator/Interfaces"
 	"blockEmulator/Proposals"
 	"blockEmulator/config"
@@ -18,43 +19,50 @@ type NakamotoPoW struct {
 	proposalBuffer *Proposals.ProposalBuffer
 	domain         Interfaces.Domain
 	proposeLock    sync.Mutex
-
-	difficulty     *big.Int
-	ExpTime        time.Duration
+	conf           *config.PoWConfig
+	expTime        time.Duration
 	lastUpdateTime time.Time
 }
 
 func NewPoWConsensus() *NakamotoPoW {
 	ret := &NakamotoPoW{
 		proposalBuffer: Proposals.NewProposalBuffer(),
-		difficulty:     config.IdConfig.Difficulty, // 是同一个对象
-		ExpTime:        1 * time.Minute,
+		expTime:        1 * time.Minute,
 		lastUpdateTime: time.Now(),
 	}
 	ret.Disable()
 	return ret
 }
 
+func (con *NakamotoPoW) difficulty() *big.Int {
+	return con.conf.Difficulty
+}
+
 func NewIdChainCon() *NakamotoPoW {
 	ret := NewPoWConsensus()
+	ret.conf = config.IdConfig.PowConf
 	ret.id = config.IdMod
 	ret.domain = idChain.IDC
 	return ret
 }
 
-func (con *NakamotoPoW) UpdateDifficulty(bTime time.Time) {
+func (con *NakamotoPoW) UpdateDifficulty(head Block.Head) {
 	// 计算上次更新以来经过的时间
+	if head.GetNonce() == 0 || head.GetNonce()%con.conf.UpdatePeriod != 0 {
+
+	}
+	bTime := head.Time()
 	elapsed := bTime.Sub(con.lastUpdateTime)
 
-	// 将 elapsed 和 ExpTime 转为 big.Int（单位均为纳秒）
+	// 将 elapsed 和 expTime 转为 big.Int（单位均为纳秒）
 	elapsedInt := big.NewInt(int64(elapsed))
-	expInt := big.NewInt(int64(con.ExpTime))
+	expInt := big.NewInt(int64(con.expTime))
 
-	// 计算新的 difficulty（目标值）： newDifficulty = oldDifficulty * elapsed / ExpTime
-	newDifficulty := new(big.Int).Mul(con.difficulty, elapsedInt)
+	// 计算新的 difficulty（目标值）： newDifficulty = oldDifficulty * elapsed / expTime
+	newDifficulty := new(big.Int).Mul(con.difficulty(), elapsedInt)
 	newDifficulty.Div(newDifficulty, expInt)
-	log.Printf("difficulty %v update to %v", con.difficulty.String(), newDifficulty.String())
-	con.difficulty = newDifficulty
+	log.Printf("difficulty %v update to %v", con.difficulty().String(), newDifficulty.String())
+	con.conf.Difficulty = newDifficulty
 	con.lastUpdateTime = bTime
 	return
 }
@@ -87,9 +95,9 @@ func (con *NakamotoPoW) Propose() {
 		return
 	}
 	proType, proVars := pro.Get()
-	preSuccess := Interfaces.Operations[proType].PrepareAfterLock(proVars)
+	preSuccess := Interfaces.Operations[proType].Prepare(proVars)
 	if !preSuccess {
-		log.Printf("----Propose(%v) : prepare failed----", proType)
+		log.Printf("----Schedule(%v) : prepare failed----", proType)
 		con.Enable()
 		return
 	}

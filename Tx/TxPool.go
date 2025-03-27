@@ -82,7 +82,7 @@ func (pool *Pool) PackageInnerTxs() []*Transaction {
 	var transactions []*Transaction
 	for _, tx := range pool.localTxs.txs {
 		transactions = append(transactions, tx)
-		if len(transactions) >= config.BlockSize {
+		if len(transactions) >= config.MaxBlockSize {
 			break
 		}
 	}
@@ -109,7 +109,7 @@ func (pool *Pool) PackageRelayTxs() [][]*Transaction {
 	var transactions = make([][]*Transaction, config.FideConf.ShardAmount)
 	cnt := 0
 	round := 0
-	for cnt < config.BlockSize {
+	for cnt < config.MaxBlockSize {
 		roundAdd := false
 		for dest, list := range candidateGroups {
 			if len(list) > round {
@@ -117,7 +117,7 @@ func (pool *Pool) PackageRelayTxs() [][]*Transaction {
 				roundAdd = true
 				cnt++
 			}
-			if cnt >= config.BlockSize {
+			if cnt >= config.MaxBlockSize {
 				break
 			}
 		}
@@ -156,7 +156,7 @@ func (pool *Pool) PackageCrossTxs() []*Transaction {
 	}
 	// 使用轮询方式从各候选组中选取交易，保证分布均匀
 	round := 0
-	for len(transactions) < config.BlockSize {
+	for len(transactions) < config.MaxBlockSize {
 		roundAdded := false
 		// 遍历所有候选组
 		for _, group := range candidateGroups {
@@ -164,7 +164,7 @@ func (pool *Pool) PackageCrossTxs() []*Transaction {
 				transactions = append(transactions, group[round])
 				roundAdded = true
 				// 达到区块大小限制时退出
-				if len(transactions) >= config.BlockSize {
+				if len(transactions) >= config.MaxBlockSize {
 					break
 				}
 			}

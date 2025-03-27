@@ -12,59 +12,25 @@ import (
 )
 
 var (
-	shardNum int
-	nodeNum  int
-	//shardID  int
-	//nodeID   int
-	modID     int
+	shardNum  int
+	nodeNum   int
 	packaging bool
 	isGen     int
-	//accountPubKey string
-	seq string
+	idMode    int
 )
 
 func main() {
 	pflag.IntVarP(&shardNum, "shardNum", "S", 0, "indicate that how many shards are deployed")
 	pflag.IntVarP(&nodeNum, "nodeNum", "N", 0, "indicate how many nodes of each idChain are deployed")
-	//pflag.IntVarP(&shardID, "shardID", "s", 0, "id of the idChain to which this node belongs, for example, 0")
-	//pflag.IntVarP(&nodeID, "nodeID", "n", 0, "id of this node, for example, 0")
-	pflag.IntVarP(&modID, "modID", "m", 4, "choice Committee Method,for example, 0, [CLPA_Broker,CLPA,Broker,Relay,Federal] ")
 	pflag.BoolVarP(&packaging, "client", "p", false, "packaging csv files.")
-	//pflag.BoolVarP(&config.Debugging, "debug", "d", false, "debug enabled?")
 	pflag.IntVarP(&isGen, "gen", "g", 0, "generation bat")
-	//pflag.StringVarP(&accountPubKey, "accountPubKey", "k", "", "account public key")
-	//pflag.StringVarP(&seq, "num", "p", "", "sequence of this process")
+	pflag.IntVarP(&idMode, "idMode", "i", -1, "select consensus protocol using in identity chain, 0 = pow ")
 	pflag.Parse()
-
 	log.SetFlags(log.Ltime | log.Lmicroseconds)
-
-	//if isGen {
-	//	build.GenerateBatFile(nodeNum, shardNum, modID)
-	//	return
-	//}
-
-	//if isClient {
-	//	build.BuildSupervisor(uint64(nodeNum), uint64(shardNum), uint64(modID))
-	//} else {
-	//	build.BuildNewPbftNode(uint64(nodeID), uint64(nodeNum), uint64(shardID), uint64(shardNum), uint64(modID))
-	//}
-	//{
-	//	content := message.NewStrContent("\t", "\\\t", "\t\\\ta").Sign("kyino")
-	//	log.Printf(content.CheckSign())
-	//	parsed := content.ParseContent()
-	//	log.Printf("%v", parsed)
-	//	return
-	//}
-	if seq == "10" {
-		err := os.Remove("./record")
-		if err != nil {
-			return
-		}
-		return
-	}
+	config.Init()
 	if shardNum != 0 {
-		config.FideShardAmount = shardNum
-		log.Printf("shardNum = %d", config.FideShardAmount)
+		config.ShardAmount = shardNum
+		log.Printf("shardNum = %d", config.ShardAmount)
 	}
 	config.FideConf = config.InitFideConfig()
 	if nodeNum != 0 {
@@ -91,7 +57,8 @@ func main() {
 	if cnt > 1 {
 		log.Panic("Enable multiple sharding consensus. ")
 	}
-	build.Run(uint64(modID))
+
+	build.Run()
 }
 
 func GenTestSh(numTasks int, shardNum int) {
@@ -99,13 +66,13 @@ func GenTestSh(numTasks int, shardNum int) {
 	if numTasks < shardNum {
 		log.Panic("Not enough sharding tasks")
 	}
+
 	file, err := os.Create("test.sh")
 	if err != nil {
 		fmt.Println("Error creating script file:", err)
 		os.Exit(1)
 	}
 	defer file.Close()
-
 	// 写入 shebang 行
 	fmt.Fprintln(file, "#!/bin/zsh")
 

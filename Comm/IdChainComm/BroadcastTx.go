@@ -1,4 +1,4 @@
-package Comm
+package IdChainComm
 
 import (
 	"blockEmulator/Interfaces"
@@ -9,7 +9,6 @@ import (
 	"log"
 )
 
-// ----------- broadcast -----------
 var RegisterBroadcast Interfaces.CommType = "RegisterBroadcast"
 
 type RegisterBroadCom struct {
@@ -50,7 +49,7 @@ func (com *RegisterBroadCom) HandleResponse(*message.Message) {
 	log.Panic()
 }
 
-func (com *RegisterBroadCom) Reset() Interfaces.CommType {
-	com.con = Interfaces.Con[config.IdMod]
+func (com *RegisterBroadCom) Reset(con Interfaces.Consensus) Interfaces.CommType {
+	com.con = con
 	return com.Type()
 }

@@ -8,6 +8,8 @@ import (
 	"sync"
 )
 
+// PingCom is used to initialize the connection between nodes and nodes
+// before consensus to eliminate the effect of Tcp conn.
 type PingCom struct {
 	con  Interfaces.Consensus
 	cnt  int
@@ -44,8 +46,8 @@ func (com *PingCom) Response(...*[]byte) bool {
 func (com *PingCom) HandleResponse(*message.Message) {
 }
 
-func (com *PingCom) Reset() Interfaces.CommType {
-	com.con = Interfaces.Con[config.IdMod]
+func (com *PingCom) Reset(con Interfaces.Consensus) Interfaces.CommType {
+	com.con = con
 	com.cnt = 0
 	return com.Type()
 }

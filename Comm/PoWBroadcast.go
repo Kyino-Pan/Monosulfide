@@ -2,7 +2,6 @@ package Comm
 
 import (
 	"blockEmulator/Interfaces"
-	"blockEmulator/config"
 	"blockEmulator/message"
 	"sync"
 )
@@ -55,7 +54,7 @@ func (com *PoWBroadcastCom) HandleResponse(*message.Message) {
 	panic("should not reach here")
 }
 
-func (com *PoWBroadcastCom) Reset() Interfaces.CommType {
-	com.con = Interfaces.Con[config.IdMod]
+func (com *PoWBroadcastCom) Reset(con Interfaces.Consensus) Interfaces.CommType {
+	com.con = con
 	return com.Type()
 }

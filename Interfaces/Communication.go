@@ -6,7 +6,7 @@ import (
 )
 
 type Communication interface {
-	Reset() CommType
+	Reset(con Consensus) CommType
 	Request(vars ...*[]byte) bool
 	HandleRequest(msg *message.Message) bool
 	Response(vars ...*[]byte) bool
@@ -22,8 +22,7 @@ const (
 	CrossLock     CommType = "CrossLock"
 	SyncIBlock    CommType = "SyncIBlock"
 	SyncFideBlock CommType = "SyncFideBlock"
-	Log           CommType = "Log"
-	Finish        CommType = "Finish"
+	Register      CommType = "Register"
 	MigratePro    CommType = "MigratePro" // migrate proposal buffer
 	ViewChange    CommType = "ViewChange"
 	MainBegin     CommType = "MainBegin"
@@ -39,10 +38,9 @@ func (ct CommType) ResponseType() message.MessageType {
 }
 
 var (
-	Communications = make(map[CommType]Communication)
-	ComTypes       = make(map[message.MessageType]CommType)
-	ComBuffer      = make(map[CommType]map[bool][][]*[]byte) // [type][isRequest][i]=vars
-	comBufferLock  sync.Mutex
+	ComTypes      = make(map[message.MessageType]CommType)
+	ComBuffer     = make(map[CommType]map[bool][][]*[]byte) // [type][isRequest][i]=vars
+	comBufferLock sync.Mutex
 )
 
 func IsReq(mt message.MessageType) bool {
@@ -72,3 +70,5 @@ func ClearComBuffer() {
 	}
 	ComBuffer = make(map[CommType]map[bool][][]*[]byte)
 }
+
+var Communications = make(map[CommType]Communication)

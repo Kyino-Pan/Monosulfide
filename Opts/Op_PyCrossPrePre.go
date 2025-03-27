@@ -23,13 +23,13 @@ func (op *CrossPrePreOpt) Reset(con Interfaces.Consensus) message.RequestType {
 	return message.CrossPrePre
 }
 
-func (op *CrossPrePreOpt) Propose(...*[]byte) {
+func (op *CrossPrePreOpt) Schedule(...*[]byte) {
 	byteArray := new([]byte)
-	//log.Printf("Propose")
+	//log.Printf("Schedule")
 	//log.Printf("amount::%v", pyramid.LocalShard.UnconfirmedCrossTxsLen())
 	Propose(op.con, message.CrossPrePre, byteArray)
 }
-func (op *CrossPrePreOpt) PrepareAfterLock(vars []*[]byte) bool {
+func (op *CrossPrePreOpt) Prepare(vars []*[]byte) bool {
 	shard := pyramid.LocalShard
 	op.localId = shard.Id
 	//shard.Lock()

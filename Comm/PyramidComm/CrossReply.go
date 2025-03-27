@@ -1,4 +1,4 @@
-package Comm
+package PyramidComm
 
 import (
 	"blockEmulator/Interfaces"
@@ -43,7 +43,7 @@ func (com *CrossReplyCom) HandleRequest(msg *message.Message) bool {
 	threshold := pyramid.GlobalPyrShards[BShardId].Threshold()
 	com.reqCnt[*hash]++
 	if com.reqCnt[*hash] == threshold {
-		Interfaces.Operations[message.AppendCBlock].Propose() // This propose will return AFTER this round of consensus is finished.
+		Interfaces.Operations[message.AppendCBlock].Schedule() // This propose will return AFTER this round of consensus is finished.
 		// this propose is not-synced, the PROPOSE will not return until execute is finished
 	}
 	return true
@@ -55,8 +55,8 @@ func (com *CrossReplyCom) Response(...*[]byte) bool {
 
 func (com *CrossReplyCom) HandleResponse(*message.Message) {}
 
-func (com *CrossReplyCom) Reset() Interfaces.CommType {
-	com.con = Interfaces.Con[config.PyrMod]
+func (com *CrossReplyCom) Reset(con Interfaces.Consensus) Interfaces.CommType {
+	com.con = con
 	com.reqCnt = make(map[crypt.Hash]uint64)
 	return com.Type()
 }

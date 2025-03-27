@@ -1,18 +1,23 @@
 package config
 
 var (
-	FideConf        *FideConfig
-	FideShardAmount = 1
+	FideConf *FideConfig
 )
 
 const ClassRelay = false
 
 func InitFideConfig() *FideConfig {
-	return &FideConfig{
-		Enable:      false,
-		ShardAmount: FideShardAmount,
-		Threshold:   FideShardAmount - (FideShardAmount+2)/3 + 1,
+	ret := new(FideConfig)
+	if CrossShardConsensus == UniRelay {
+		ret.Enable = true
 	}
+	return ret.UpdateShardAmount(ShardAmount)
+}
+
+func (conf *FideConfig) UpdateShardAmount(num int) *FideConfig {
+	conf.ShardAmount = num
+	conf.Threshold = num - (num+2)/3 + 1
+	return conf
 }
 
 type FideConfig struct {

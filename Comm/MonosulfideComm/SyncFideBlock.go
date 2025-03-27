@@ -1,4 +1,4 @@
-package Comm
+package MonosulfideComm
 
 import (
 	"blockEmulator/Block"
@@ -103,7 +103,7 @@ func (com *SyncSBlockCom) HandleRequest(msg *message.Message) bool {
 				// 如果这个block没有指向本地副本的topHash，且不是重复收到的block fmt.Print()
 				if localChain.Blocks[localChain.TopBlockHash[RemoteSID]] != nil {
 					log.Printf("shard%v::HASH_ERROR, localTop:%v, errorTop:%v", RemoteSID,
-						localChain.Blocks[localChain.TopBlockHash[RemoteSID]].Nonce(),
+						localChain.Blocks[localChain.TopBlockHash[RemoteSID]].Head().GetNonce(),
 						block.Nonce())
 				}
 				return false
@@ -138,7 +138,7 @@ func (com *SyncSBlockCom) CheckBlock(rid int) {
 		if com.finish[rid][hash] == false {
 			localShard := Monosulfide.LocalShard // i-shards internal tx is recorded in local shard txPool
 			localShard.Append(block)
-			//log.Printf("S%v B%v accecpted", rid, b.Nonce())
+			//log.Printf("S%v B%v accecpted", rid, b.GetNonce())
 			delete(com.blocks[rid], hash)
 			delete(com.reqCnt[rid], hash)
 			com.finish[rid][hash] = true
@@ -156,8 +156,8 @@ func (com *SyncSBlockCom) HandleResponse(*message.Message) {
 	log.Panic()
 }
 
-func (com *SyncSBlockCom) Reset() Interfaces.CommType {
-	com.con = Interfaces.Con[config.FideMod]
+func (com *SyncSBlockCom) Reset(con Interfaces.Consensus) Interfaces.CommType {
+	com.con = con
 	com.reqCnt = make(map[int]map[crypt.Hash]uint64)
 	com.blocks = make(map[int]map[crypt.Hash]Block.Block)
 	com.finish = make(map[int]map[crypt.Hash]bool)

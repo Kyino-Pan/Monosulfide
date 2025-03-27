@@ -17,15 +17,15 @@ func (con *ConPbft) Propose() {
 		return
 	}
 	proType, proVars := pro.Get()
-	preSuccess := Interfaces.Operations[proType].PrepareAfterLock(proVars)
+	preSuccess := Interfaces.Operations[proType].Prepare(proVars)
 	if !preSuccess {
-		log.Printf("----Propose(%v) :%v prepare failed----", con.seq(), proType)
+		log.Printf("----Schedule(%v) :%v prepare failed----", con.seq(), proType)
 		con.Enable()
 		return
 	}
 	request := con.NewPrePrepareMsg(con.seq(), proType, proVars...)
 	if con.printFlag {
-		log.Printf("----Propose(%v):%v(%v remaining)----", con.seq(), proType, con.GetProposalBuffer().Amount())
+		log.Printf("----Schedule(%v):%v(%v remaining)----", con.seq(), proType, con.GetProposalBuffer().Amount())
 	}
 	con.SendMsg(request)
 }

@@ -71,7 +71,7 @@ func (sh *Shard) SelectMainNode() *idChain.Node {
 	randNum := idChain.IDC.GetRand()
 	newIdMainNodeID := crypt.PubKey2Str(idChain.SelectRandomKey(sh.NodeMap, randNum))
 	sh.mainNode = sh.NodeMap[newIdMainNodeID]
-	if config.Debugging == true && sh.Id == config.DebugNodeAtShard && config.DebugIsMainNode {
+	if config.EnableSpy == true && sh.Id == config.SpyAtShard && config.SpyIsMainNode {
 		for _, node := range sh.NodeMap {
 			if node.Port() == config.ListenPort {
 				sh.mainNode = node

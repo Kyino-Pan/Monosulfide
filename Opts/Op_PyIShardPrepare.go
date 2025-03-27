@@ -20,14 +20,14 @@ func (op *IShardPrepareOpt) Reset(con Interfaces.Consensus) message.RequestType 
 	return message.IShardPrepare
 }
 
-func (op *IShardPrepareOpt) Propose(vars ...*[]byte) {
+func (op *IShardPrepareOpt) Schedule(vars ...*[]byte) {
 	// vars = [[byteBlock]]
 	op.Verify(Interfaces.TransVars(vars))
 	Propose(op.con, message.IShardPrepare, vars...)
 	return
 }
 
-func (op *IShardPrepareOpt) PrepareAfterLock([]*[]byte) bool {
+func (op *IShardPrepareOpt) Prepare([]*[]byte) bool {
 	return true
 }
 

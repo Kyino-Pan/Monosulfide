@@ -1,4 +1,4 @@
-package Comm
+package IdChainComm
 
 import (
 	"blockEmulator/Block"
@@ -12,33 +12,27 @@ import (
 	"log"
 )
 
-var (
-	Register Interfaces.CommType = "Register"
-)
-
 type RegisterCom struct {
 	con      Interfaces.Consensus
 	tempAddr string
 }
 
 func (com *RegisterCom) Type() Interfaces.CommType {
-	return Register
+	return Interfaces.Register
 }
 
 func (com *RegisterCom) Request(...*[]byte) bool {
 	con := com.con
 	if launch.Listener.GetListenPort() == config.ListenPort {
+		// If is the first node in the system.
 		idChain.InitNode(true)
 		return true
 	}
-	// The first node will listen
-	// has connected to the local primary node
 	con.SendMsg(&message.Message{
-		Type:       Register.RequestType(),
+		Type:       Interfaces.Register.RequestType(),
 		Content:    *message.NewStrContent(launch.Listener.GetLocalAddr()),
 		RemoteInfo: config.DnsAddr + ":" + config.ListenPort,
 	})
-	//log.Println("RegisterRequest sent.")
 	return true
 }
 
@@ -59,7 +53,7 @@ func (com *RegisterCom) Response(...*[]byte) bool {
 	log.Print("Registered")
 	content := *idChain.IDC.ChainInfo()
 	com.con.SendMsg(&message.Message{
-		Type:       Register.ResponseType(),
+		Type:       Interfaces.Register.ResponseType(),
 		Content:    content,
 		RemoteInfo: com.tempAddr,
 	})
@@ -80,7 +74,7 @@ func (com *RegisterCom) HandleResponse(msg *message.Message) {
 	log.Printf("--->>>	Initialize Finished")
 }
 
-func (com *RegisterCom) Reset() Interfaces.CommType {
-	com.con = Interfaces.Con[config.IdMod]
+func (com *RegisterCom) Reset(con Interfaces.Consensus) Interfaces.CommType {
+	com.con = con
 	return com.Type()
 }

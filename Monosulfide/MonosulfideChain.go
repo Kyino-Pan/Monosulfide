@@ -126,7 +126,7 @@ func (mc *MonosulfideChain) Append(block *Block.FideBlock) {
 					config.FideConf.ShardAmount-len(finishCount))
 				need = false
 				finishCount[mc.Id()] = true
-				if len(finishCount) == config.FideConf.ShardAmount || config.TPS_TEST {
+				if len(finishCount) == config.FideConf.ShardAmount {
 					if LocalShard.Main() == idChain.RunningNode {
 						Interfaces.Communications[Interfaces.SyncFideBlock].Request()
 						LocalShard.Chain.Save()
@@ -191,7 +191,7 @@ func (mc *MonosulfideChain) Append(block *Block.FideBlock) {
 				need = false
 				log.Printf("shard%v %v", blockMaker, string(block.H.StateRoot))
 				finishCount[blockMaker] = true
-				if len(finishCount) == config.FideConf.ShardAmount || config.TPS_TEST {
+				if len(finishCount) == config.FideConf.ShardAmount || config.TpsTest {
 					if LocalShard.Main() == idChain.RunningNode {
 						LocalShard.Chain.Save()
 					}
@@ -329,7 +329,7 @@ func (mc *MonosulfideChain) recordCBlock(sid int, block *Block.FideBlock) {
 
 //func (sc *MonosulfideChain) ack(sid, ackId int, hash crypt.Hash) {
 //	if b := sc.Blocks[hash]; b != nil {
-//		//log.Printf("S%v B%v already commited.", sid, b.Nonce())
+//		//log.Printf("S%v B%v already commited.", sid, b.GetNonce())
 //		return
 //	}
 //	for i, subBlock := range sc.blockBuffer[sid][hash].B.SubBlocks {
@@ -337,7 +337,7 @@ func (mc *MonosulfideChain) recordCBlock(sid int, block *Block.FideBlock) {
 //		currBlock := sc.Blocks[hash]
 //		if ackId == sc.Id() {
 //			for {
-//				if currBlock.Nonce() == preAck {
+//				if currBlock.GetNonce() == preAck {
 //					break
 //				}
 //			}
@@ -358,7 +358,7 @@ func (mc *MonosulfideChain) recordCBlock(sid int, block *Block.FideBlock) {
 //				}
 //				sc.TxPool.RemoveTxs(b.CBody.Txs)
 //			}
-//			log.Printf("Local %v sub executed.", block.Nonce())
+//			log.Printf("Local %v sub executed.", block.GetNonce())
 //		} else {
 //			//block.Print()
 //			txs := block.B.SubBlocks[sc.Id()].CBody.Txs
@@ -371,11 +371,11 @@ func (mc *MonosulfideChain) recordCBlock(sid int, block *Block.FideBlock) {
 //			sc.exp.CTxDelaySum += tCTx * time.Duration(CTxAmount)
 //
 //			sc.Blocks[hash] = block
-//			log.Printf("S%v B%v sub executed.", sid, block.Nonce())
+//			log.Printf("S%v B%v sub executed.", sid, block.GetNonce())
 //		}
 //		delete(sc.blockAck[sid], hash)
 //		delete(sc.blockBuffer[sid], hash)
-//		log.Printf("S%v B%v commited.", sid, block.Nonce())
+//		log.Printf("S%v B%v commited.", sid, block.GetNonce())
 //	}
 //}
 
@@ -420,7 +420,7 @@ func (mc *MonosulfideChain) Save() {
 	writer.Writef("%v", float64(numC+numI)/conTime.Seconds())                      // TPS
 	writer.Writef("%.2f", config.CommCalc)                                         // KB
 	writer.Writef(strconv.Itoa(config.TotalDataSize) + "Txs")
-	writer.Writef("S" + strconv.Itoa(config.FideShardAmount) + "N" + strconv.Itoa(len(idChain.IDC.NodeMap)))
+	writer.Writef("S" + strconv.Itoa(config.FideConf.ShardAmount) + "N" + strconv.Itoa(len(idChain.IDC.NodeMap)))
 	Interfaces.Communications[Interfaces.SyncFideBlock].Request()
 	time.Sleep(config.ExitDelay)
 	return

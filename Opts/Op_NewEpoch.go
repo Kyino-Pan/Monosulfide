@@ -32,19 +32,19 @@ func (op *NewEpochOpt) Reset(con Interfaces.Consensus) message.RequestType {
 	return message.NewEpoch
 }
 
-func (op *NewEpochOpt) Propose(...*[]byte) {
+func (op *NewEpochOpt) Schedule(...*[]byte) {
 	EncodeIdBlock := new([]byte)
 	Propose(op.con, message.NewEpoch, EncodeIdBlock)
-	//Interfaces.Propose(op.con,NewEpoch, newBlock.EncodeH())
+	//Interfaces.Schedule(op.con,NewEpoch, newBlock.EncodeH())
 }
 
-func (op *NewEpochOpt) PrepareAfterLock(vars []*[]byte) bool {
+func (op *NewEpochOpt) Prepare(vars []*[]byte) bool {
 	idChain.IDC.ActivateAll()
 	random := rand.Uint64()
 	randByte := crypt.UintToBytes(random)
 	newBlock := idChain.IDC.Chain.GenerateIdBlock(randByte)
-	if config.IdConfig.UsingPoW {
-		for !crypt.IsValidBlock(newBlock.Head().EncodeH(), config.IdConfig.Difficulty) {
+	if config.IdConfig.UsingPoW() {
+		for !crypt.IsValidBlock(newBlock.Head().EncodeH(), config.IdConfig.PowConf.Difficulty) {
 			newBlock = idChain.IDC.Chain.GenerateIdBlock(randByte)
 		}
 	}
@@ -79,10 +79,8 @@ func (op *NewEpochOpt) Verify(vars [][]byte) bool {
 func (op *NewEpochOpt) Execute() {
 	timeStamp := time.Now()
 	idChain.IDC.Append(op.block)
-	if config.IdConfig.UsingPoW {
-		if op.block.Nonce()%config.IdConfig.UpdatePeriod == config.IdConfig.UpdatePeriod-1 {
-			Interfaces.Con[config.IdMod].(*pow.NakamotoPoW).UpdateDifficulty(op.block.Head().Time())
-		}
+	if config.IdConfig.UsingPoW() {
+		Interfaces.Con[config.IdMod].(*pow.NakamotoPoW).UpdateDifficulty(op.block.Head())
 	}
 	//idChain.RunningNode = idChain.IDC.NodeMap[idChain.RunningNode.StrKey()] // refresh self status
 	idChain.RunningNode.PrintNode()
@@ -134,8 +132,8 @@ func RefreshRelayShard() {
 	randNum := idChain.IDC.GetRand()
 	for strPubKey, node := range idChain.IDC.NodeMap {
 		shardId, _ := crypt.HashToRange(randNum, node.NodeId, node.Port(), shardAmount)
-		if node.Port() == config.ListenPort && config.Debugging {
-			shardId = config.DebugNodeAtShard
+		if node.Port() == config.ListenPort && config.EnableSpy {
+			shardId = config.SpyAtShard
 		}
 		node.ShardID = uint64(shardId)
 		shardMaps[shardId][strPubKey] = node
@@ -172,7 +170,7 @@ func RefreshRelayShard() {
 		storage.StateLogger.Writef("%v", idChain.RunningNode.IpAddr)
 
 		Interfaces.Con[config.RelayMod].Enable()
-		go Interfaces.Operations[message.RelayTx].Propose()
+		go Interfaces.Operations[message.RelayTx].Schedule()
 	}
 
 }
@@ -191,8 +189,8 @@ func RefreshFideShard() {
 	randNum := idChain.IDC.GetRand()
 	for strPubKey, node := range idChain.IDC.NodeMap {
 		shardId, _ := crypt.HashToRange(randNum, node.NodeId, node.Port(), shardAmount)
-		if node.Port() == config.ListenPort && config.Debugging {
-			shardId = config.DebugNodeAtShard
+		if node.Port() == config.ListenPort && config.EnableSpy {
+			shardId = config.SpyAtShard
 		}
 		node.ShardID = uint64(shardId)
 		shardMaps[shardId][strPubKey] = node
@@ -240,8 +238,8 @@ func RefreshShard() {
 	randNum := idChain.IDC.GetRand()
 	for strPubKey, node := range idChain.IDC.NodeMap {
 		shardId, _ := crypt.HashToRange(randNum, node.NodeId, node.Port(), shardAmount)
-		if node.Port() == config.ListenPort && config.Debugging {
-			shardId = config.DebugNodeAtShard
+		if node.Port() == config.ListenPort && config.EnableSpy {
+			shardId = config.SpyAtShard
 		}
 		node.ShardID = uint64(shardId)
 		shardMaps[shardId][strPubKey] = node
@@ -273,7 +271,7 @@ func RefreshShard() {
 	if pyramid.IsPyrMainNode() {
 		storage.StateLogger.Writef("%v", idChain.RunningNode.IpAddr)
 		Interfaces.Con[config.PyrMod].Enable()
-		go Interfaces.Operations[message.InternalTx].Propose()
+		go Interfaces.Operations[message.InternalTx].Schedule()
 		if pyramid.LocalShard.IsBShard() {
 			go NxtCrossTx()
 		}
@@ -281,14 +279,14 @@ func RefreshShard() {
 }
 
 func EpochCountDown(t time.Duration) {
-	if config.IdConfig.UsingPBFT {
+	if config.IdConfig.UsingPbft() {
 		time.Sleep(t)
 		if idChain.IsIdMainNode() {
-			Interfaces.Operations[message.NewEpoch].Propose()
+			Interfaces.Operations[message.NewEpoch].Schedule()
 		}
 	}
-	if config.IdConfig.UsingPoW {
-		Interfaces.Operations[message.NewEpoch].Propose()
+	if config.IdConfig.UsingPoW() {
+		Interfaces.Operations[message.NewEpoch].Schedule()
 		log.Printf("Mining on &%v", idChain.IDC.Chain.TopBlock().Hash().String())
 	}
 }
