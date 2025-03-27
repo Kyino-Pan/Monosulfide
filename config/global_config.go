@@ -22,7 +22,6 @@ const (
 	OutputPath       = "./output/"
 	DnsAddr          = "127.0.0.1"
 	ListenPort       = "20000"
-	MonitorAddr      = Localhost + ":" + ListenPort
 	IdRunningAddr    = "IdRunningAddr"      // message will be delivered to every non-sleeping nodes.
 	IdLegalAddr      = "IdLegalAddr"        // message will be delivered to EVERY node.
 	PyrRunningAddr   = "pyramidRunningAddr" //

@@ -8,9 +8,8 @@ import (
 )
 
 var (
-	shardAmount     = 6
-	PyrConf         = InitShardConfig()
-	ActivatePyramid = false
+	shardAmount = 6
+	PyrConf     = InitShardConfig()
 )
 
 type PyramidConfig struct {
@@ -169,7 +168,9 @@ func InitShardConfig() *PyramidConfig {
 		log.Panic(err)
 	}
 	conf.route()
-	conf.Enable = ActivatePyramid
+	if CrossShardConsensus == Pyramid {
+		conf.Enable = true
+	}
 	conf.DefaultAddr = make([]string, shardAmount)
 	for i := 0; i < shardAmount; i++ {
 		conf.DefaultAddr[i] = GenerateShardAddress(i)

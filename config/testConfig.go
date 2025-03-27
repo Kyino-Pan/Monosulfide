@@ -8,7 +8,8 @@ var (
 	ShardAmount         = 2
 	IdChainConsensus    = PoW
 	IntraShardConsensus = Pbft
-	CrossShardConsensus = UniRelay
+	//CrossShardConsensus = UniRelay
+	CrossShardConsensus = Pyramid
 )
 
 const (
