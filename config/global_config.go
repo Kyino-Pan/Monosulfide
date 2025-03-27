@@ -28,17 +28,17 @@ const (
 	PyramidRelateI   = "PyramidRelateI"     // related shards mainNodes
 	PrivateKeyPEM    = "./privateKeyPEM.txt"
 	PublicKeyPEM     = "./publicKeyPEM.txt"
-	ShardPrefix      = "ShardPrefix"
 	MsgSplitter      = byte('~')
 	ViewTrigger      = "VIEW_TRIGGER"
 	SleepMin         = 64
 	PrefixMsgTypeLen = 40
-	IdMod            = 0
-	PyrMod           = 1
-	FideMod          = 2
-	RelayMod         = 3
-	EoFDelay         = 16 * time.Second
-	RealRand         = false
+
+	IdMod    = 0
+	PyrMod   = 1
+	FideMod  = 2
+	RelayMod = 3
+
+	RealRand = false
 )
 
 var (

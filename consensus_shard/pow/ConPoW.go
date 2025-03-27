@@ -82,7 +82,7 @@ func (con *NakamotoPoW) Propose() {
 	pro := con.GetProposalBuffer().Pop()
 	if pro == nil {
 		con.Enable()
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(256 * time.Millisecond)
 		go con.Propose()
 		return
 	}

@@ -2,24 +2,25 @@ package build
 
 import (
 	"blockEmulator/Comm"
+	"blockEmulator/Interfaces"
 	"blockEmulator/Opts"
 	"blockEmulator/config"
 	"blockEmulator/consensus_shard"
 	"blockEmulator/launch"
+	"blockEmulator/message"
 )
 
 import (
-	"blockEmulator/test"
 	"time"
 )
 
-func Run(mod uint64) {
+func Run(uint64) {
 	launch.TcpListen()
 	consensus_shard.Init()
 	Comm.Init()
 	Opts.Init()
 	go consensus_shard.Selector() // Core logic loop
-	go test.Trigger()             // Propose Begin
+	go Trigger()                  // Propose Begin
 	go launch.Listener.Hearing()  //
 	go killerTicker()
 	NodeKiller()
@@ -47,5 +48,14 @@ func NodeKiller() {
 				return
 			}
 		}
+	}
+}
+
+func Trigger() {
+	time.Sleep(time.Second * 2) // waiting for main node init.
+	if launch.Listener.GetListenPort() == config.ListenPort {
+		//go NetTester()
+		time.Sleep(config.InitDelay)
+		Interfaces.Operations[message.NewEpoch].Propose()
 	}
 }
