@@ -40,7 +40,6 @@ func (con *ConPbft) parseCommitMsg(msg *message.Message) (uint64, string) {
 }
 
 func (con *ConPbft) HandleCommit(msg *message.Message) {
-	//log.Printf("con addr: %p, pNodeAddr: %p", con, con.pNode)
 	seq, _ := con.parseCommitMsg(msg)
 	if con.proposalStatus[seq] == Committed {
 		return
@@ -51,7 +50,6 @@ func (con *ConPbft) HandleCommit(msg *message.Message) {
 		con.CommitMsgs[seq] = make(map[string]*message.Message)
 	}
 	con.CommitMsgs[seq][msg.RemoteInfo] = msg
-	//log.Printf("Commit from %v(%v/%v)", idChain.IDC.NodeMap[msg.RemoteInfo].IpAddr, len(con.CommitMsgs[seq]), con.GetDomain().Threshold())
 	con.HandleCommitMsgs()
 }
 
@@ -64,7 +62,8 @@ func (con *ConPbft) HandleCommitMsgs() {
 	for _, msg := range con.CommitMsgs[con.seq()] {
 		seq, key := con.parseCommitMsg(msg)
 		sender := idChain.IDC.NodeMap[msg.RemoteInfo]
-		{ // safety check
+		{
+			// safety check
 			_, commitCntExist := con.cntCommitConfirm[key]
 			if !commitCntExist {
 				con.cntCommitConfirm[key] = make(map[*rsa.PublicKey]bool)
@@ -84,7 +83,6 @@ func (con *ConPbft) HandleCommitMsgs() {
 		}
 		if cnt >= threshold && con.isReply[seq] == false && con.isCommitBroadcast[key] == true {
 			con.isReply[seq] = true
-			//replyMsg := con.NewReplyMessage(seq, true) // must be called before Execute, to support mainNode changing
 			{
 				log.Printf(
 					"\t\tRound %d (%v)executing......\n", con.seq(), con.proposalPool[seq].RequestType)
@@ -103,12 +101,12 @@ func (con *ConPbft) HandleCommitMsgs() {
 			if idChain.RunningNode != con.GetDomain().Main() {
 				if msg := con.PrePreMsgs[con.seq()]; msg != nil {
 					// pre-pre msg may arrive before this round execution, and will return false with its seq check.
+					// so we need to handle it here.
 					con.HandlePrePrepare(msg)
 				}
 			} else {
 				con.Enable()
 			}
-			//log.Printf("---------Mode %v Round %v Begin-----------", con.id, con.seq())
 			storage.CommLogger.Writef("%v Round %v begin", con.id, con.seq())
 			return
 		}

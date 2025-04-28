@@ -23,7 +23,6 @@ type TxManager struct {
 	totalDataAmount int
 	batchDataAmount int
 	dataCnt         int
-	shardAmount     int
 	localPool       *Tx.Pool
 }
 
@@ -33,14 +32,6 @@ func NewTxManager(pool *Tx.Pool) *TxManager {
 		batchDataAmount: config.BatchSize,
 		dataCnt:         0,
 		localPool:       pool,
-	}
-	if config.PyrConf.Enable {
-		ret.shardAmount = config.PyrConf.ShardAmount
-	} else if config.FideConf.Enable {
-		ret.shardAmount = config.FideConf.ShardAmount
-	} else {
-		ret.shardAmount = 1
-		log.Printf("WARNING::Tx injector initaled without config")
 	}
 	return ret
 }
@@ -119,12 +110,11 @@ func (tm *TxManager) sending(txList []*Tx.Transaction) {
 }
 
 func (tm *TxManager) SendTxs(txsInShard map[int][]*Tx.Transaction) {
-	for shardId := 0; shardId < (tm.shardAmount); shardId++ {
+	for shardId := 0; shardId < (config.ShardAmount); shardId++ {
 		txs := Txs2Bytes(txsInShard[shardId])
 		content := message.NewByteContent(&txs)
-		//log.Printf(time.Now().String())
 		if config.PyrConf.Enable {
-			for _, node := range pyramid.GlobalPyrShards[shardId].NodeMap {
+			for _, node := range pyramid.GlobalShards[shardId].NodeMap {
 				remoteAddr := node.IpAddr
 				launch.LaunchPyrMsg(&message.Message{
 					Type:       message.SendTxs,
@@ -148,7 +138,7 @@ func (tm *TxManager) SendTxs(txsInShard map[int][]*Tx.Transaction) {
 func (tm *TxManager) HandleSendTxs(msg *message.Message) {
 	cnt := 0
 	if config.PyrConf.Enable {
-		for pyramid.GlobalPyrShards == nil {
+		for pyramid.GlobalShards == nil {
 			time.Sleep(100 * time.Millisecond)
 			cnt++
 			if cnt >= 128 {
@@ -167,7 +157,6 @@ func (tm *TxManager) HandleSendTxs(msg *message.Message) {
 	}
 	contents := msg.GetContents()
 	txs := ParseTxs(contents[0])
-	//log.Printf("%v txs", len(*txs))
 	for _, tx := range *txs {
 		tm.localPool.Append(tx)
 	}

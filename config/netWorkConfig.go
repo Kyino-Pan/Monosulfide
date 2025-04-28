@@ -12,9 +12,9 @@ var (
 // 网络延迟配置
 var (
 	// NDelay 在DT未配置时的默认网络延迟时间
-	NDelay   = time.Duration(0) * time.Millisecond // ms
-	DT       = make(map[int]time.Duration)         // DT[i]为shard i的延迟时间
-	EnableDT = true
+	NDelay           = time.Duration(0) * time.Millisecond // ms
+	DT               = make(map[int]time.Duration)         // DT[i]为shard i的延迟时间
+	EnableDelayTable = true
 )
 
 func InitNetDelay() {

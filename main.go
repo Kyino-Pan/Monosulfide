@@ -1,8 +1,8 @@
 package main
 
 import (
-	"blockEmulator/build"
 	"blockEmulator/config"
+	"blockEmulator/engine"
 	"blockEmulator/storage"
 	"fmt"
 	"github.com/spf13/pflag"
@@ -27,7 +27,6 @@ func main() {
 	pflag.IntVarP(&idMode, "idMode", "i", -1, "select consensus protocol using in identity chain, 0 = pow ")
 	pflag.Parse()
 	log.SetFlags(log.Ltime | log.Lmicroseconds)
-	config.Init()
 	if shardNum != 0 {
 		config.ShardAmount = shardNum
 		log.Printf("shardNum = %d", config.ShardAmount)
@@ -58,7 +57,7 @@ func main() {
 		log.Panic("Enable multiple sharding consensus. ")
 	}
 
-	build.Run()
+	engine.Run()
 }
 
 func GenTestSh(numTasks int, shardNum int) {

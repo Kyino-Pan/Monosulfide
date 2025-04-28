@@ -29,6 +29,8 @@ func Init() {
 		Deploy(new(PyramidComm.CrossLockCom), pyr)
 		Deploy(new(PyramidComm.CrossPrepareCom), pyr)
 		Deploy(new(PyramidComm.CrossReplyCom), pyr)
+		Deploy(new(MainBeginCom), pyr)
+		Deploy(new(PingCom), pyr)
 	}
 
 	if config.FideConf.Enable {

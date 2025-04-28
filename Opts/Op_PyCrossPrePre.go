@@ -31,7 +31,7 @@ func (op *CrossPrePreOpt) Schedule(...*[]byte) {
 }
 func (op *CrossPrePreOpt) Prepare(vars []*[]byte) bool {
 	shard := pyramid.LocalShard
-	op.localId = shard.Id
+	op.localId = shard.Id()
 	//shard.Lock()
 	newBlock := shard.Chain.GenerateCrossBlock()
 	op.tempBlock = newBlock

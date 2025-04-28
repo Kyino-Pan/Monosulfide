@@ -10,8 +10,7 @@ import (
 	"log"
 )
 
-// Reply is only used as a debug tool currently.
-
+// Reply is disabled currently.
 func (con *ConPbft) NewReplyMessage(seq uint64, result bool) *message.Message {
 	reply := message.Reply{
 		MessageID: seq,
@@ -66,7 +65,7 @@ func (con *ConPbft) HandleReply(msg *message.Message) {
 		}
 	}
 	threshold := con.GetDomain().Threshold()
-	if con.proposalPool[seq].RequestType == message.NewEpoch {
+	if con.proposalPool[seq].RequestType == message.EpochReset {
 		threshold = idChain.IDC.GlobalThreshold()
 	}
 	if con.isReply[seq] == true {

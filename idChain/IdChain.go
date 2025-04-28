@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"log"
 	"sort"
+	"strconv"
 	"sync"
 )
 
@@ -33,6 +34,26 @@ type IdChain struct {
 	tmpTopHash    crypt.Hash
 }
 
+func (idc *IdChain) Reset(port int, i int) {
+	Init(strconv.Itoa(port))
+}
+
+func (idc *IdChain) SetMap(mp map[string]*Node) {
+	idc.NodeMap = mp
+}
+
+func (idc *IdChain) GetTxPool() *Tx.Pool {
+	return idc.Chain.TxPool
+}
+
+func (idc *IdChain) SetMain(node *Node) {
+	idc.mainNode = node
+}
+
+func (idc *IdChain) Id() int {
+	return 0x9527
+}
+
 func (idc *IdChain) GetMap() map[string]*Node {
 	return idc.NodeMap
 }
@@ -41,7 +62,7 @@ func (idc *IdChain) SetViewId(u uint64) {
 	idc.viewId = u
 }
 
-func (idc *IdChain) Addr() string {
+func (idc *IdChain) BroadAddr() string {
 	return config.IdRunningAddr
 }
 
@@ -174,7 +195,7 @@ func (idc *IdChain) Append(block Block.Block) {
 				rand := crypt.BytesToUint(randByte)
 				idc.randNum = rand
 			}
-			idc.SelectMainNode()
+			idc.SelectMain()
 		} else {
 			log.Panic("Should implement block's specific method")
 		}
@@ -183,7 +204,7 @@ func (idc *IdChain) Append(block Block.Block) {
 	idc.roundId++
 }
 
-func (idc *IdChain) SelectMainNode() *Node {
+func (idc *IdChain) SelectMain() *Node {
 	idc.Lock()
 	defer idc.Unlock()
 	newIdMainNodeID := crypt.PubKey2Str(SelectRandomKey(idc.NodeMap, idc.randNum))

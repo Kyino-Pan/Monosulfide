@@ -51,7 +51,7 @@ func (r *Record) Refresh() *Record {
 }
 
 func (mc *MonosulfideChain) Id() int {
-	return mc.ownerShard.Id
+	return mc.ownerShard.sid
 }
 
 func (mc *MonosulfideChain) GenerateBlock() Block.Block {
@@ -70,7 +70,7 @@ func (mc *MonosulfideChain) GenerateBlock() Block.Block {
 	}
 	for i := 0; i < config.FideConf.ShardAmount; i++ {
 		// package txs to different shards from txPool
-		if i == LocalShard.Id {
+		if i == LocalShard.sid {
 			innerTx := txsArray[i]
 			blockBody.Intra = innerTx
 			blockBody.SubBlocks[i] = Block.EmptySubBlock()
@@ -335,7 +335,7 @@ func (mc *MonosulfideChain) recordCBlock(sid int, block *Block.FideBlock) {
 //	for i, subBlock := range sc.blockBuffer[sid][hash].B.SubBlocks {
 //		preAck := sc.blockAck[sid][i]
 //		currBlock := sc.Blocks[hash]
-//		if ackId == sc.Id() {
+//		if ackId == sc.sid() {
 //			for {
 //				if currBlock.GetNonce() == preAck {
 //					break
@@ -350,10 +350,10 @@ func (mc *MonosulfideChain) recordCBlock(sid int, block *Block.FideBlock) {
 //	if sc.blockAck[sid][hash] == config.FideConf.Threshold {
 //		block := sc.blockBuffer[sid][hash]
 //		tBegin := block.H.Timestamp
-//		if sid == sc.Id() {
+//		if sid == sc.sid() {
 //			// 执行本shard的转出确认
 //			for sid, b := range block.B.SubBlocks {
-//				if sid == sc.Id() {
+//				if sid == sc.sid() {
 //					continue
 //				}
 //				sc.TxPool.RemoveTxs(b.CBody.Txs)
@@ -361,7 +361,7 @@ func (mc *MonosulfideChain) recordCBlock(sid int, block *Block.FideBlock) {
 //			log.Printf("Local %v sub executed.", block.GetNonce())
 //		} else {
 //			//block.Print()
-//			txs := block.B.SubBlocks[sc.Id()].CBody.Txs
+//			txs := block.B.SubBlocks[sc.sid()].CBody.Txs
 //			sc.TxPool.RemoveTxs(txs)
 //			// 记录交易延迟
 //			CTxAmount := len(txs)
@@ -458,11 +458,11 @@ func NewFideChain(shard *Shard) *MonosulfideChain {
 		ret.TopBlockHash[i] = baseBlock.Hash()
 		ret.blockBuffer[i][baseBlock.Hash()] = baseBlock
 	}
-	ret.TxPool = Tx.NewTxPool(shard.Id)
+	ret.TxPool = Tx.NewTxPool(shard.sid)
+	ret.EnableStorage(idChain.RunningNode.Port())
 	return ret
 }
 
 func (mc *MonosulfideChain) EnableStorage(port string) {
 	mc.storage = storage.NewStorage(port, uint64(mc.Id()))
-
 }

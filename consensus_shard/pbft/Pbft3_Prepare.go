@@ -108,7 +108,7 @@ func (con *ConPbft) HandlePrepareMsgs(hash []byte) {
 			log.Printf("WARNING::Shouldn't reach here")
 			return
 		}
-		if req.RequestType == message.NewEpoch && idChain.RunningNode.IsPreparing() {
+		if req.RequestType == message.EpochReset && idChain.RunningNode.IsPreparing() {
 			threshold = 0
 		}
 		if cnt >= threshold && con.isCommitBroadcast[key] == false {

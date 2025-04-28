@@ -28,7 +28,7 @@ type Chain struct {
 }
 
 func (ch *Chain) Id() int {
-	return ch.ownerShard.Id
+	return ch.ownerShard.sid
 }
 
 func (ch *Chain) GenerateBlock() Block.Block {
@@ -38,7 +38,7 @@ func (ch *Chain) GenerateBlock() Block.Block {
 	OutTxs := make([]*Tx.Transaction, 0)
 	for i := 0; i < config.RelayConf.ShardAmount; i++ {
 		// package txs to different shards from txPool
-		if i == LocalShard.Id {
+		if i == LocalShard.sid {
 			innerTx := ch.TxPool.PackageInnerTxs()
 			IntraTxs = innerTx
 			continue
@@ -77,7 +77,6 @@ func (ch *Chain) Append(block *Block.RelayBlock) {
 			ch.Blocks[bHash] = block
 			ch.TopBlockHash[ch.Id()] = bHash
 			ch.nonce++
-			//Interfaces.Communications[Interfaces.SyncRelayTx].Request()
 			//todo
 		}
 		if block.B.Out != nil {
@@ -132,7 +131,7 @@ func (ch *Chain) LockMoney(commit []*Tx.Transaction) {
 
 func NewRelayChain(port uint64, shard *Shard) *Chain {
 	ret := &Chain{
-		storage:      storage.NewStorage(strconv.FormatUint(port, 10), uint64(shard.Id)),
+		storage:      storage.NewStorage(strconv.FormatUint(port, 10), uint64(shard.sid)),
 		lock:         sync.RWMutex{},
 		ownerShard:   shard,
 		Blocks:       make(map[crypt.Hash]Block.Block),
@@ -158,6 +157,6 @@ func NewRelayChain(port uint64, shard *Shard) *Chain {
 		ret.TopBlockHash[i] = baseBlock.Hash()
 		ret.blockBuffer[i][baseBlock.Hash()] = baseBlock
 	}
-	ret.TxPool = Tx.NewTxPool(shard.Id)
+	ret.TxPool = Tx.NewTxPool(shard.sid)
 	return ret
 }

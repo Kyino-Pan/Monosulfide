@@ -33,7 +33,7 @@ func (com *ViewChangeCom) Request(...*[]byte) bool {
 	com.con.SendMsg(&message.Message{
 		Type:       Interfaces.ViewChange.RequestType(),
 		Content:    *message.NewByteContent(crypt.UintToBytes(idChain.IDC.GetViewId() + 1)),
-		RemoteInfo: com.con.GetDomain().Addr(),
+		RemoteInfo: com.con.GetDomain().BroadAddr(),
 	})
 	return true
 }
@@ -55,13 +55,13 @@ func (com *ViewChangeCom) HandleRequest(msg *message.Message) bool {
 		if len(com.count[vid]) >= int(com.con.GetDomain().Threshold()) && com.state == standBy {
 			idChain.IDC.Main().Activating = false
 			idChain.IDC.Main().Sleeping = false
-			idChain.IDC.SelectMainNode()
+			idChain.IDC.SelectMain()
 			log.Printf("New main node is %v", idChain.IDC.Main().IpAddr)
 			if idChain.IsIdMainNode() {
 				com.con.SendMsg(&message.Message{
 					Type:       Interfaces.ViewChange.ResponseType(),
 					Content:    *message.NewByteContent(crypt.UintToBytes(vid)),
-					RemoteInfo: com.con.GetDomain().Addr(),
+					RemoteInfo: com.con.GetDomain().BroadAddr(),
 				})
 				com.change(vid)
 				com.con.Enable()

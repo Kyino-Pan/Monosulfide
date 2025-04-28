@@ -70,18 +70,18 @@ func (con *ConPbft) HandlePrePrepare(msg *message.Message) {
 		log.Printf("%v, %v, %v, %v", req.RequestType, remoteNode.IpAddr, seq, con.seq())
 		log.Panic("main node is malicious")
 	}
-	if req.RequestType == message.NewEpoch && idChain.RunningNode.IsWaiting() {
+	if req.RequestType == message.EpochReset && idChain.RunningNode.IsWaiting() {
 		con.setSeq(seq)
 		idChain.RunningNode.Activating = true //pNode: waiting -> preparing
 	}
 	tempSeq := con.seq()
-	if req.RequestType == message.NewEpoch && idChain.RunningNode.IsWaiting() {
+	if req.RequestType == message.EpochReset && idChain.RunningNode.IsWaiting() {
 		con.setSeq(seq)
 		idChain.RunningNode.Activating = true //pNode: waiting -> preparing
 	}
 	result := con.verify(seq, req, hash, remoteNode)
 	if result == false {
-		if req.RequestType == message.NewEpoch && idChain.RunningNode.IsWaiting() {
+		if req.RequestType == message.EpochReset && idChain.RunningNode.IsWaiting() {
 			con.setSeq(tempSeq)
 			idChain.RunningNode.Activating = false
 			//roll back if propose is wrong.
@@ -120,7 +120,7 @@ func (con *ConPbft) verify(seq uint64, req *message.Request, hash []byte, remote
 		log.Panicf("Proposer should be %v, got %v", con.GetDomain().Main().IpAddr, remoteNode.IpAddr)
 		return false
 	}
-	if idChain.RunningNode.IsWaiting() && req.RequestType != message.NewEpoch {
+	if idChain.RunningNode.IsWaiting() && req.RequestType != message.EpochReset {
 		return false
 	}
 	if string(hash) != string(crypt.GetDigest(req)) {

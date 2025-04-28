@@ -40,7 +40,7 @@ func (com *CrossReplyCom) HandleRequest(msg *message.Message) bool {
 	hash := crypt.NewHash(content[0])
 	remoteNode := idChain.IDC.NodeMap[msg.RemoteInfo]
 	BShardId := remoteNode.ShardID
-	threshold := pyramid.GlobalPyrShards[BShardId].Threshold()
+	threshold := pyramid.GlobalShards[BShardId].Threshold()
 	com.reqCnt[*hash]++
 	if com.reqCnt[*hash] == threshold {
 		Interfaces.Operations[message.AppendCBlock].Schedule() // This propose will return AFTER this round of consensus is finished.

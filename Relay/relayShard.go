@@ -18,9 +18,27 @@ type Shard struct {
 	GlobalState map[string]Tx.Account
 	Chain       *Chain
 	rwLock      sync.RWMutex
-	Id          int
+	sid         int
 	mainNode    *idChain.Node
 	tempBlock   *Block.StdBlock
+}
+
+func (sh *Shard) SetMap(mp map[string]*idChain.Node) {
+	sh.rwLock.Lock()
+	defer sh.rwLock.Unlock()
+	sh.NodeMap = mp
+}
+
+func (sh *Shard) GetTxPool() *Tx.Pool {
+	return sh.Chain.TxPool
+}
+
+func (sh *Shard) SetMain(node *idChain.Node) {
+	sh.mainNode = node
+}
+
+func (sh *Shard) Id() int {
+	return sh.sid
 }
 
 func (sh *Shard) GetMap() map[string]*idChain.Node {
@@ -55,7 +73,7 @@ func (sh *Shard) SetViewId(u uint64) {
 	panic("implement me")
 }
 
-func (sh *Shard) Addr() string {
+func (sh *Shard) BroadAddr() string {
 	//TODO implement me
 	panic("implement me")
 }
@@ -68,11 +86,11 @@ func (sh *Shard) Append(block Block.Block) {
 	}
 }
 
-func (sh *Shard) SelectMainNode() *idChain.Node {
+func (sh *Shard) SelectMain() *idChain.Node {
 	randNum := idChain.IDC.GetRand()
 	newIdMainNodeID := crypt.PubKey2Str(idChain.SelectRandomKey(sh.NodeMap, randNum))
 	sh.mainNode = sh.NodeMap[newIdMainNodeID]
-	if config.EnableSpy == true && sh.Id == config.SpyAtShard && config.SpyIsMainNode {
+	if config.EnableSpy == true && sh.sid == config.SpyAtShard && config.SpyIsMainNode {
 		for _, node := range sh.NodeMap {
 			if node.Port() == config.ListenPort {
 				sh.mainNode = node
@@ -87,21 +105,20 @@ func (sh *Shard) NodeAmount() int {
 	return len(sh.NodeMap)
 }
 
-func NewRelayShard(port, shardId int) *Shard {
-	ret := &Shard{
-		NodeMap:     nil,
-		GlobalState: nil,
-		Chain:       nil,
-		rwLock:      sync.RWMutex{},
-		Id:          shardId,
-	}
-	ret.Chain = NewRelayChain(uint64(port), ret)
-	return ret
-}
-
 func (sh *Shard) BlockExist(hash crypt.Hash) bool {
 	if LocalShard.Chain.Blocks[hash] != nil {
 		return true
 	}
 	return false
+}
+
+func (sh *Shard) Reset(port int, i int) {
+	sh.NodeMap = nil
+	sh.GlobalState = nil
+	sh.Chain = nil
+	sh.rwLock = sync.RWMutex{}
+	sh.sid = i
+
+	sh.Chain = NewRelayChain(uint64(port), sh)
+	return
 }

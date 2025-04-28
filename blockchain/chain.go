@@ -63,27 +63,24 @@ func (c *Chain) Append(block Block.Block) {
 	//block.print()
 	Txs := block.Body().Txs()
 	if Txs != nil {
-		//log.Printf("Tx amount: %v", c.TxPool.TxLists[0][0].Len())
 		c.TxPool.RemoveTxs(Txs)
-		//log.Printf("Remaining: %v", c.TxPool.TxLists[0][0].Len())
 	}
 	c.TopBlockHash[0] = block.Hash()
 	c.Blocks[block.Hash()] = block
-	currBlock := block
-	{
-		// test code
-		for {
-			if currBlock == nil {
-				// 到达创世区块
-				break
-			}
-			if b, ok := currBlock.(*Block.StdBlock); ok {
-				preHash := b.H.ParentHashes[c.Id()]
-				fmt.Printf("-> %p\t %d\n", currBlock, len(b.B.Txs()))
-				currBlock = c.Blocks[preHash]
-			}
-		}
-	}
+	//{
+	//	currBlock := block
+	//	for {
+	//		if currBlock == nil {
+	//			// 到达创世区块
+	//			break
+	//		}
+	//		if b, ok := currBlock.(*Block.StdBlock); ok {
+	//			preHash := b.H.ParentHashes[c.Id()]
+	//			fmt.Printf("-> %p\t %d\n", currBlock, len(b.B.Txs()))
+	//			currBlock = c.Blocks[preHash]
+	//		}
+	//	}
+	//}
 	c.Storage.AddBlock(block)
 	return
 }
@@ -125,7 +122,6 @@ func (c *Chain) GetBlocks() []Block.Block {
 		blocks = append(blocks, block)
 		if b, ok := block.(*Block.StdBlock); ok {
 			if len(b.H.ParentHashes) == 0 {
-				//fmt.Println("已到达创世区块")
 				break
 			}
 			// 更新当前哈希为父区块哈希
@@ -155,7 +151,6 @@ func (c *Chain) VerifyBlock(block Block.Block) bool {
 			log.Println("mpt root error.")
 			return false
 		}
-		//todo
 		//	other validity checks.
 		//	add here
 		return true

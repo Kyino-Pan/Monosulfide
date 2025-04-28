@@ -28,7 +28,7 @@ func (com *CrossPrepareCom) Request(...*[]byte) bool {
 	com.lock.Lock()
 	defer com.lock.Unlock()
 	localShard := pyramid.LocalShard
-	localId := localShard.Id
+	localId := localShard.Id()
 	byteBlock := com.con.GetDomain().ProcessingBlock().Encode()
 	//log.Printf("%v", len(byteBlock))
 	contents := message.NewByteContent(crypt.UintToBytes(uint64(localId))).AppendByteContent(&byteBlock)
@@ -62,7 +62,7 @@ func (com *CrossPrepareCom) HandleRequest(msg *message.Message) bool {
 func (com *CrossPrepareCom) Response(vars ...*[]byte) bool {
 	com.lock.Lock()
 	defer com.lock.Unlock()
-	localId := pyramid.LocalShard.Id
+	localId := pyramid.LocalShard.Id()
 	contents := message.NewByteContent(crypt.UintToBytes(uint64(localId))).
 		AppendByteContent(vars[0])
 	com.con.SendMsg(&message.Message{

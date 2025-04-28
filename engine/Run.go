@@ -1,4 +1,4 @@
-package build
+package engine
 
 import (
 	"blockEmulator/Comm"
@@ -27,6 +27,9 @@ func Run() {
 	NodeKiller()
 }
 
+// killerTicker and NodeKiller are used to handle zombie threads.
+var killer = make(chan bool, 1)
+
 func killerTicker() {
 	ticker := time.NewTicker(time.Second)
 	for range ticker.C {
@@ -34,10 +37,8 @@ func killerTicker() {
 	}
 }
 
-var killer = make(chan bool, 1)
-
 func NodeKiller() {
-	t := 600
+	t := 600 //
 	for {
 		select {
 		case <-config.STOPPER:
@@ -57,6 +58,6 @@ func Trigger() {
 	if launch.Listener.GetListenPort() == config.ListenPort {
 		//go NetTester()
 		time.Sleep(config.InitDelay)
-		Interfaces.Operations[message.NewEpoch].Schedule()
+		Interfaces.Operations[message.EpochReset].Schedule()
 	}
 }

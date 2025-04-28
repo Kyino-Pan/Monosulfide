@@ -13,7 +13,7 @@ func Deploy(op Interfaces.Operation, con Interfaces.Consensus) {
 
 func Init() {
 	id := Interfaces.Con[config.IdMod]
-	Deploy(new(NewEpochOpt), id)
+	Deploy(new(EpochResetOpt), id)
 	Deploy(new(RemoveNodeOpt), id)
 
 	pyr := Interfaces.Con[config.PyrMod]

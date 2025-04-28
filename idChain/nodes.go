@@ -45,7 +45,7 @@ func (n *Node) IsWaiting() bool {
 
 func (n *Node) IsPreparing() bool {
 	return n.Sleeping && n.Activating
-} // during newEpoch nodes
+} // during EpochReset nodes
 
 func (n *Node) IsLegal() bool {
 	return n.Sleeping || n.Activating

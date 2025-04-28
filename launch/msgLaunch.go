@@ -105,10 +105,10 @@ func _launchPad(msg *message.Message) {
 	case addr == config.PyramidRelateI:
 		log.Printf("LaunchPad::%v to %v,(%v/%v).\n", msg.Type, msg.RemoteInfo, len(LaunchPool), cap(LaunchPool))
 		for _, index := range pyramid.LocalShard.RelatedIShard {
-			if pyramid.GlobalPyrShards[index].Main() == nil {
+			if pyramid.GlobalShards[index].Main() == nil {
 				continue
 			}
-			shardAddr := pyramid.GlobalPyrShards[index].Main().IpAddr
+			shardAddr := pyramid.GlobalShards[index].Main().IpAddr
 			MSG := &message.Message{
 				Type:       msg.Type,
 				Content:    msg.Content,

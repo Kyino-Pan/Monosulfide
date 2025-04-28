@@ -5,9 +5,8 @@ import (
 )
 
 const (
-	Pbft = 0
-	PoW  = 1
-
+	Pbft        = 0
+	PoW         = 1
 	ClassicRely = 1000
 	Pyramid     = 1001
 	UniRelay    = 1002
@@ -39,6 +38,7 @@ const (
 	PyrMod   = 1
 	FideMod  = 2
 	RelayMod = 3
+	BcMod    = 1024
 
 	RealRand = false
 )
@@ -49,7 +49,3 @@ var (
 	SuccessByte     = []byte("successByte")
 	FailByte        = []byte("failByte")
 )
-
-func Init() {
-
-}

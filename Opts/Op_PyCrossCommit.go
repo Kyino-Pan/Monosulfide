@@ -7,7 +7,6 @@ import (
 	"blockEmulator/idChain"
 	"blockEmulator/message"
 	"blockEmulator/pyramid"
-	"time"
 )
 
 type CrossCommitOpt struct {
@@ -39,13 +38,8 @@ func (op *CrossCommitOpt) Execute() {
 			RemoteInfo: idChain.RunningNode.StrKey(),
 		},
 		)
-		go NxtCrossTx()
+		go pyramid.NxtCrossTx()
 	}
-}
-
-func NxtCrossTx() {
-	time.Sleep(config.SleepMin * 32 * time.Millisecond)
-	Interfaces.Communications[Interfaces.CrossLock].Request()
 }
 
 func (op *CrossCommitOpt) Reset(con Interfaces.Consensus) message.RequestType {

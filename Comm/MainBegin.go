@@ -2,9 +2,11 @@ package Comm
 
 import (
 	"blockEmulator/Interfaces"
-	"blockEmulator/Monosulfide"
 	"blockEmulator/config"
+	"blockEmulator/idChain"
 	"blockEmulator/message"
+	"blockEmulator/pyramid"
+	"log"
 	"sync"
 	"time"
 )
@@ -23,14 +25,13 @@ func (com *MainBeginCom) Type() Interfaces.CommType {
 func (com *MainBeginCom) Request(...*[]byte) bool {
 	com.lock.Lock()
 	defer com.lock.Unlock()
-	if config.FideConf.Enable {
-		for _, sh := range Monosulfide.GlobalShards {
-			com.con.SendMsg(&message.Message{
-				Type:       com.Type().RequestType(),
-				Content:    nil,
-				RemoteInfo: sh.Main().IpAddr,
-			})
-		}
+	// Request is only called by main nodes.
+	for _, sh := range Interfaces.GlobalShards {
+		com.con.SendMsg(&message.Message{
+			Type:       com.Type().RequestType(),
+			Content:    nil,
+			RemoteInfo: sh.Main().IpAddr,
+		})
 	}
 	return true
 }
@@ -40,20 +41,35 @@ func (com *MainBeginCom) HandleRequest(*message.Message) bool {
 	com.lock.Lock()
 	defer com.lock.Unlock()
 	com.cnt++
-	if com.cnt == config.FideConf.ShardAmount {
-		Interfaces.Con[config.FideMod].Enable()
-		go Interfaces.Operations[message.FideTx].Schedule()
-		config.TxBegin = time.Now()
-		config.CalcComm = true
+	if com.cnt == config.ShardAmount {
+		switch config.CrossShardConsensus {
+		case config.Pyramid:
+			Interfaces.Con[config.Pyramid].Enable()
+			go Interfaces.Operations[message.InternalTx].Schedule()
+			if pyramid.LocalShard.IsBShard() {
+				go pyramid.NxtCrossTx()
+			}
+		case config.UniRelay:
+			Interfaces.Con[config.FideMod].Enable()
+			go Interfaces.Operations[message.FideTx].Schedule()
+			config.TxBegin = time.Now()
+			config.CalcComm = true
+		case config.ClassicRely:
+			if Interfaces.LocalShard.Main() == idChain.RunningNode {
+				go Interfaces.Operations[message.RelayTx].Schedule()
+			}
+		}
 	}
 	return true
 }
 
 func (com *MainBeginCom) Response(...*[]byte) bool {
+	log.Panic("SHOULD NOT BE RECEIVED")
 	return true
 }
 
 func (com *MainBeginCom) HandleResponse(*message.Message) {
+	log.Panic("SHOULD NOT BE RECEIVED")
 }
 
 func (com *MainBeginCom) Reset(con Interfaces.Consensus) Interfaces.CommType {

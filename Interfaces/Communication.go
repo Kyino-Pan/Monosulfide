@@ -20,19 +20,20 @@ const (
 	CrossPrepare  CommType = "CrossPrepare"
 	CrossReply    CommType = "CrossReply"
 	CrossLock     CommType = "CrossLock"
+	MainBegin     CommType = "MainBegin"
+	MigratePro    CommType = "MigratePro" // migrate proposal buffer
+	PoWBroadcast  CommType = "PoWBroadcast"
+	Ping          CommType = "ping"
+	Register      CommType = "Register"
 	SyncIBlock    CommType = "SyncIBlock"
 	SyncFideBlock CommType = "SyncFideBlock"
-	Register      CommType = "Register"
-	MigratePro    CommType = "MigratePro" // migrate proposal buffer
 	ViewChange    CommType = "ViewChange"
-	MainBegin     CommType = "MainBegin"
-	Ping          CommType = "ping"
-	PoWBroadcast  CommType = "PoWBroadcast"
 )
 
 func (ct CommType) RequestType() message.MessageType {
 	return message.MessageType(string(ct) + "REQ")
 }
+
 func (ct CommType) ResponseType() message.MessageType {
 	return message.MessageType(string(ct) + "RES")
 }

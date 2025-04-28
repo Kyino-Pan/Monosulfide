@@ -20,7 +20,7 @@ func originBlock(shardId int) Block.Block {
 	ret.H = &Block.StdHead{
 		ParentHashes: make(map[int]crypt.Hash),
 		MerkleRoot:   Tx.GenTxRoot(nil),
-		StateRoot:    GlobalPyrShards[shardId].GenStateRoot(),
+		StateRoot:    GlobalShards[shardId].GenStateRoot(),
 		Nonce:        0,
 		Timestamp:    time.Now(),
 	}
@@ -32,7 +32,7 @@ type PyrChain struct {
 	storage              *storage.Storage // storage is the bolt-db to store the blocks
 	TxPool               *Tx.Pool
 	lock                 sync.RWMutex
-	ownerShard           *PyrShard
+	ownerShard           *Shard
 	Blocks               map[crypt.Hash]Block.Block
 	TopBlockHash         map[int]crypt.Hash
 	TopHashToBeConfirmed map[int]bool // 乐观接受
@@ -40,26 +40,26 @@ type PyrChain struct {
 }
 
 func (pc *PyrChain) Id() int {
-	return pc.ownerShard.Id
+	return pc.ownerShard.Id()
 }
 
-func NewPyrChain(port uint64, shard *PyrShard) *PyrChain {
+func NewPyrChain(port uint64, shard *Shard) *PyrChain {
 	ret := &PyrChain{
 		TopBlockHash:         make(map[int]crypt.Hash),
 		TopHashToBeConfirmed: make(map[int]bool),
-		storage:              storage.NewStorage(strconv.FormatUint(port, 10), uint64(shard.Id)),
+		storage:              storage.NewStorage(strconv.FormatUint(port, 10), uint64(shard.Id())),
 		ownerShard:           shard,
 		Blocks:               make(map[crypt.Hash]Block.Block),
 		Nonce:                0,
 	}
-	ret.TxPool = Tx.NewTxPool(shard.Id)
+	ret.TxPool = Tx.NewTxPool(shard.sid)
 	return ret
 }
 
 func (pc *PyrChain) InitOriginBlocks() {
 	shard := pc.ownerShard
-	orgBlock := originBlock(shard.Id)
-	pc.Append(orgBlock, shard.Id)
+	orgBlock := originBlock(shard.Id())
+	pc.Append(orgBlock, shard.Id())
 	log.Println(orgBlock.Hash().Bytes())
 	for _, sId := range shard.RelatedIShard {
 		// init i-shards' originBlock
@@ -95,7 +95,7 @@ func (pc *PyrChain) GenerateInternalBlock() Block.Block {
 		StateRoot:    pc.ownerShard.GenStateRoot(),
 		Nonce:        pc.Nonce + 1,
 	}
-	//head.ParentHashes[pc.Id()] = pc.TopBlockHash.Bytes()
+	//head.ParentHashes[pc.sid()] = pc.TopBlockHash.Bytes()
 	body := &Block.StdBody{
 		Transactions: InnerTxs,
 	}

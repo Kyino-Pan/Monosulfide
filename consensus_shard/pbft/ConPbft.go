@@ -1,6 +1,7 @@
 package pbft
 
 import (
+	"blockEmulator/Block"
 	"blockEmulator/Interfaces"
 	"blockEmulator/Proposals"
 	"blockEmulator/config"
@@ -57,6 +58,11 @@ type ConPbft struct {
 	manLock         sync.Mutex
 	manCond         *sync.Cond
 	Zilean          map[string]time.Time
+	handlingBlock   Block.Block
+}
+
+func (con *ConPbft) ProcessingBlock() Block.Block {
+	return con.handlingBlock
 }
 
 func (con *ConPbft) Id() int {
@@ -133,7 +139,7 @@ func NewPyramidCon() *ConPbft {
 	return ret
 }
 
-func NewFideBehavior() Interfaces.Consensus {
+func NewMonofideCon() Interfaces.Consensus {
 	ret := NewPbftConsensus()
 	ret.legalNodesAddr = config.FideRunningAddr
 	ret.printFlag = false

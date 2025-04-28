@@ -2,6 +2,7 @@ package pyramid
 
 import (
 	"blockEmulator/Block"
+	"blockEmulator/Interfaces"
 	"blockEmulator/Tx"
 	"blockEmulator/config"
 	"blockEmulator/crypt"
@@ -10,62 +11,97 @@ import (
 	"time"
 )
 
-var GlobalPyrShards []*PyrShard = nil
-var LocalShard *PyrShard
+var GlobalShards []*Shard = nil
+var LocalShard *Shard
 
-type PyrShard struct {
-	NodeMap       map[string]*idChain.Node // participants of this shard
+type Shard struct {
+	NodeMap map[string]*idChain.Node // participants of this shard
+
 	Chain         *PyrChain
 	mainNode      *idChain.Node
 	shardLock     sync.Mutex
-	Id            int
+	sid           int
 	RelatedIShard []int
 	RelatedBShard []int
 	tempBlock     Block.Block
 }
 
-func (sh *PyrShard) GetMap() map[string]*idChain.Node {
+func (sh *Shard) Reset(port int, sid int) {
+	sh.NodeMap = nil
+	sh.Chain = nil
+	sh.mainNode = nil
+	sh.sid = sid
+	sh.RelatedIShard = make([]int, 0)
+	sh.RelatedBShard = make([]int, 0)
+	for i := 0; i < config.PyrConf.ShardAmount; i++ {
+		if config.PyrConf.ShardDistribution[i][sid] == true && i != sid {
+			sh.RelatedBShard = append(sh.RelatedBShard, i)
+		}
+		if config.PyrConf.ShardDistribution[sid][i] == true && i != sid {
+			sh.RelatedIShard = append(sh.RelatedIShard, i)
+		}
+	}
+	sh.Chain = NewPyrChain(uint64(port), sh)
+}
+
+func (sh *Shard) SetMap(mp map[string]*idChain.Node) {
+	sh.NodeMap = mp
+}
+
+func (sh *Shard) GetTxPool() *Tx.Pool {
+	return sh.Chain.TxPool
+}
+
+func (sh *Shard) SetMain(node *idChain.Node) {
+	sh.mainNode = node
+}
+
+func (sh *Shard) Id() int {
+	return sh.sid
+}
+
+func (sh *Shard) GetMap() map[string]*idChain.Node {
 	return sh.NodeMap
 }
 
-func (sh *PyrShard) GetBlock(bHash []byte) ([]byte, error) {
+func (sh *Shard) GetBlock(bHash []byte) ([]byte, error) {
 	return sh.Chain.storage.GetBlock(bHash)
 }
 
 // implement Domain Interface
 
-func (sh *PyrShard) GetViewId() uint64 {
+func (sh *Shard) GetViewId() uint64 {
 	//TODO implement me
 
 	panic("implement me")
 }
 
-func (sh *PyrShard) SetViewId(u uint64) {
+func (sh *Shard) SetViewId(u uint64) {
 	//TODO implement me
 
 	panic("implement me")
 }
 
-func (sh *PyrShard) Addr() string {
+func (sh *Shard) BroadAddr() string {
 	return config.PyrRunningAddr
 }
 
-func (sh *PyrShard) ProcessingBlock() Block.Block {
+func (sh *Shard) ProcessingBlock() Block.Block {
 	return sh.tempBlock
 }
-func (sh *PyrShard) SetProcessingBlock(block Block.Block) {
+func (sh *Shard) SetProcessingBlock(block Block.Block) {
 	sh.tempBlock = block
 }
 
-func (sh *PyrShard) Main() *idChain.Node {
+func (sh *Shard) Main() *idChain.Node {
 	return sh.mainNode
 }
 
-func (sh *PyrShard) SelectMainNode() *idChain.Node {
+func (sh *Shard) SelectMain() *idChain.Node {
 	randNum := idChain.IDC.GetRand()
 	newIdMainNodeID := crypt.PubKey2Str(idChain.SelectRandomKey(sh.NodeMap, randNum))
 	sh.mainNode = sh.NodeMap[newIdMainNodeID]
-	if config.EnableSpy == true && sh.Id == config.SpyAtShard && config.SpyIsMainNode {
+	if config.EnableSpy == true && sh.Id() == config.SpyAtShard && config.SpyIsMainNode {
 		for _, node := range sh.NodeMap {
 			if node.Port() == config.ListenPort {
 				sh.mainNode = node
@@ -76,12 +112,12 @@ func (sh *PyrShard) SelectMainNode() *idChain.Node {
 	return sh.mainNode
 }
 
-func NewPyramidShard(port, shardId uint64) *PyrShard {
-	ret := &PyrShard{
+func NewPyramidShard(port, shardId uint64) *Shard {
+	ret := &Shard{
 		NodeMap:       nil,
 		Chain:         nil,
 		mainNode:      nil,
-		Id:            int(shardId),
+		sid:           int(shardId),
 		RelatedIShard: make([]int, 0),
 		RelatedBShard: make([]int, 0),
 	}
@@ -98,10 +134,10 @@ func NewPyramidShard(port, shardId uint64) *PyrShard {
 }
 
 func IsPyrMainNode() bool {
-	return GlobalPyrShards[idChain.RunningNode.ShardID].mainNode == idChain.RunningNode
+	return GlobalShards[idChain.RunningNode.ShardID].mainNode == idChain.RunningNode
 }
 
-func (sh *PyrShard) state() map[string]uint {
+func (sh *Shard) state() map[string]uint {
 	ret := make(map[string]uint)
 	keys := idChain.GetSortedKeySlice(sh.NodeMap)
 	if keys == nil {
@@ -114,16 +150,16 @@ func (sh *PyrShard) state() map[string]uint {
 	return ret
 }
 
-func (sh *PyrShard) NodeAmount() int {
+func (sh *Shard) NodeAmount() int {
 	return len(sh.NodeMap)
 }
 
-func (sh *PyrShard) Threshold() uint64 {
+func (sh *Shard) Threshold() uint64 {
 	maliciousAmount := (sh.NodeAmount()+2)/3 - 1
 	return uint64(sh.NodeAmount() - maliciousAmount)
 }
 
-func (sh *PyrShard) WaitForInternalTxs() {
+func (sh *Shard) WaitForInternalTxs() {
 	beginT := time.Now()
 	for time.Since(beginT).Seconds() < 3.0 {
 		if sh.internalTxsAmount() < 5 {
@@ -134,61 +170,61 @@ func (sh *PyrShard) WaitForInternalTxs() {
 	}
 }
 
-func (sh *PyrShard) internalTxsAmount() int {
-	return sh.Chain.TxPool.TxLists[sh.Id][sh.Id].Len()
+func (sh *Shard) internalTxsAmount() int {
+	return sh.Chain.TxPool.TxLists[sh.Id()][sh.Id()].Len()
 }
 
-func (sh *PyrShard) UnconfirmedCrossTxsLen() int {
+func (sh *Shard) UnconfirmedCrossTxsLen() int {
 	cnt := 0
 	for i := 0; i < config.PyrConf.ShardAmount; i++ {
-		if i == sh.Id {
+		if i == sh.Id() {
 			continue
 		}
-		cnt += sh.Chain.TxPool.TxLists[i][sh.Id].Len()
-		cnt += sh.Chain.TxPool.TxLists[sh.Id][i].Len()
+		cnt += sh.Chain.TxPool.TxLists[i][sh.Id()].Len()
+		cnt += sh.Chain.TxPool.TxLists[sh.Id()][i].Len()
 	}
 	cnt -= sh.UnconfirmedInternal()
 	return cnt
 }
 
-func (sh *PyrShard) RecordTx(tx *Tx.Transaction) {
+func (sh *Shard) RecordTx(tx *Tx.Transaction) {
 	sh.Chain.RecordTx(tx)
 }
 
-func (sh *PyrShard) Append(block Block.Block) {
+func (sh *Shard) Append(block Block.Block) {
 	// Append will save the block to disk AND REMOVE TXS IN MEM.
-	sh.Chain.Append(block, sh.Id)
+	sh.Chain.Append(block, sh.Id())
 	// So after append the block.txs will be nil.
 }
 
-func (sh *PyrShard) UnconfirmedInternal() int {
-	return sh.Chain.TxPool.TxLists[sh.Id][sh.Id].Len()
+func (sh *Shard) UnconfirmedInternal() int {
+	return sh.Chain.TxPool.TxLists[sh.Id()][sh.Id()].Len()
 }
 
-func (sh *PyrShard) Lock() {
+func (sh *Shard) Lock() {
 	sh.shardLock.Lock()
 }
 
-func (sh *PyrShard) Unlock() {
+func (sh *Shard) Unlock() {
 	sh.shardLock.Unlock()
 }
 
-func (sh *PyrShard) IsBShard() bool {
+func (sh *Shard) IsBShard() bool {
 	return len(sh.RelatedIShard) > 0
 }
 
 // Controls returns whether shard storage the chain of shard-r
-func (sh *PyrShard) Controls(r int) bool {
-	return config.PyrConf.ShardDistribution[sh.Id][r]
+func (sh *Shard) Controls(r int) bool {
+	return config.PyrConf.ShardDistribution[sh.Id()][r]
 }
 
-func (sh *PyrShard) AppendIShBlock(block Block.Block, shardId int) {
+func (sh *Shard) AppendIShBlock(block Block.Block, shardId int) {
 	//sh.PrintTxs()
 	sh.Chain.AppendIShardIBlock(block, shardId)
 	//sh.PrintTxs()
 }
 
-func (sh *PyrShard) GenStateRoot() []byte {
+func (sh *Shard) GenStateRoot() []byte {
 	//todo
 	return []byte("STATE_ROOT")
 }
@@ -199,5 +235,10 @@ func GetBlock(hash crypt.Hash) Block.Block {
 
 func ShardAddr(id int) string {
 	// returning the addr of the main node in shard[id]
-	return GlobalPyrShards[id].Main().IpAddr
+	return GlobalShards[id].Main().IpAddr
+}
+
+func NxtCrossTx() {
+	time.Sleep(config.SleepMin * 32 * time.Millisecond)
+	Interfaces.Communications[Interfaces.CrossLock].Request()
 }

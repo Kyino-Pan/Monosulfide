@@ -56,9 +56,6 @@ func TcpListen() {
 	for {
 		ln, err := net.Listen("tcp", config.Localhost+":"+strconv.Itoa(port))
 		if err != nil {
-			// 生成一个0到20000之间的随机数
-			//randomNumber := rand.IntN(1000) // IntN(n) 生成[0, n)范围内的随机整数
-			//port += randomNumber
 			port += 10
 			cnt++
 			if cnt > 1000 {
@@ -78,11 +75,11 @@ func TcpListen() {
 }
 
 func (nl *NetListener) Hearing() {
-	storage.CommLogger.Writef("---TCP Listening on: %v", Listener.GetListenPort())
+	storage.CommLogger.Writef("---TCP Listening on: %v", nl.GetListenPort())
 	log.Printf("---TCP Listening on: %v", Listener.GetListenPort())
 	go LaunchPad()
 	for {
-		conn, err := Listener.tcpListener.Accept()
+		conn, err := nl.tcpListener.Accept()
 		if err != nil {
 			return
 		}

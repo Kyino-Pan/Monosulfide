@@ -6,10 +6,10 @@ import (
 
 var (
 	ShardAmount         = 2
-	IdChainConsensus    = PoW
+	IdChainConsensus    = Pbft
 	IntraShardConsensus = Pbft
-	//CrossShardConsensus = UniRelay
-	CrossShardConsensus = Pyramid
+	CrossShardConsensus = UniRelay
+	//CrossShardConsensus = Pyramid
 )
 
 const (

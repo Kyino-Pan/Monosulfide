@@ -76,7 +76,7 @@ func (com *SyncSBlockCom) HandleRequest(msg *message.Message) bool {
 	defer com.lock.Unlock()
 	remoteNode := idChain.IDC.NodeMap[msg.RemoteInfo]
 	remoteShard := Monosulfide.GlobalShards[remoteNode.ShardID]
-	RemoteSID := remoteShard.Id
+	RemoteSID := remoteShard.Id()
 	if com.reqCnt[RemoteSID] == nil {
 		com.blocks[RemoteSID] = make(map[crypt.Hash]Block.Block)
 		com.reqCnt[RemoteSID] = make(map[crypt.Hash]uint64)
@@ -117,13 +117,13 @@ func (com *SyncSBlockCom) HandleRequest(msg *message.Message) bool {
 		hash = *crypt.NewHash(byteBlockHash)
 		nonce = crypt.BytesToUint(contents[1])
 	}
-	storage.CommLogger.Writef("Shard%v's block%v ack from %v (%v/%v), received:%v", remoteShard.Id, nonce, remoteNode.IpAddr, com.reqCnt[RemoteSID][hash], remoteShard.Threshold(), com.blocks[RemoteSID][hash] != nil)
+	storage.CommLogger.Writef("Domain%v's block%v ack from %v (%v/%v), received:%v", remoteShard.Id(), nonce, remoteNode.IpAddr, com.reqCnt[RemoteSID][hash], remoteShard.Threshold(), com.blocks[RemoteSID][hash] != nil)
 	if com.finish[RemoteSID][hash] == true {
-		//log.Printf("blockAck%v(old) from %v (%v/%v)", remoteShard.Id, remoteNode.IpAddr, com.reqCnt[RemoteSID][hash], remoteShard.Threshold())
+		//log.Printf("blockAck%v(old) from %v (%v/%v)", remoteShard.sid, remoteNode.IpAddr, com.reqCnt[RemoteSID][hash], remoteShard.Threshold())
 		return true
 	}
 	com.reqCnt[RemoteSID][hash]++
-	//log.Printf("Shard%v's block%v ack from %v (%v/%v), received:%v", remoteShard.Id, nonce, remoteNode.IpAddr, com.reqCnt[RemoteSID][hash], remoteShard.Threshold(), com.blocks[RemoteSID][hash] != nil)
+	//log.Printf("Domain%v's block%v ack from %v (%v/%v), received:%v", remoteShard.sid, nonce, remoteNode.IpAddr, com.reqCnt[RemoteSID][hash], remoteShard.Threshold(), com.blocks[RemoteSID][hash] != nil)
 	com.CheckBlock(RemoteSID)
 	return true
 }

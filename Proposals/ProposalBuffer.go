@@ -6,19 +6,18 @@ import (
 )
 
 var (
-	LowestPriority = 1024
-	NormalPriority = 128
-	Emergency      = 64
-	CrossPriority  = 32
-	//CrossPreparePriority = CrossPriority - 2
+	LowestPriority      = 1024
+	NormalPriority      = 128
+	Now                 = 64
+	CrossPriority       = 32
 	CrossCommitPriority = CrossPriority - 1 // will only let cross commit be proposed.
 )
 
-// Operation with a smaller priority will be proposed earlier
-
+// ProposalBuffer is a priority queue （Min-heap)
+// Smaller priority -> More emergency
 type ProposalBuffer struct {
 	pros           []*Proposal
-	priority       map[message.RequestType]int // the smaller, the more prior
+	priority       map[message.RequestType]int
 	lock           sync.RWMutex
 	priorThreshold int
 }

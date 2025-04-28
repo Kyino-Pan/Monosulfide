@@ -3,7 +3,6 @@ package consensus_shard
 import (
 	"blockEmulator/AutoTx"
 	"blockEmulator/Interfaces"
-	"blockEmulator/Monosulfide"
 	"blockEmulator/Tx"
 	"blockEmulator/config"
 	"blockEmulator/consensus_shard/pbft"
@@ -70,19 +69,15 @@ func Selector() {
 					AutoTx.Manager.HandleSendTxs(msg)
 					success = true
 				} else if msgType == message.TxEOF {
-					if config.FideConf.Enable {
-						config.ManagerFinished = true
-						fmt.Println("_________TX-FINISH_________")
-						if config.EnableDT {
-							config.NDelay = config.DT[int(idChain.RunningNode.ShardID)]
-						}
-						if idChain.RunningNode == Monosulfide.LocalShard.Main() {
-							Interfaces.Communications[Interfaces.MainBegin].Request()
-						}
-						success = true
-					} else {
-						log.Panic("ENABLE BEGIN")
+					config.ManagerFinished = true
+					fmt.Println("_________TX-FINISH_________")
+					if config.EnableDelayTable {
+						config.NDelay = config.DT[int(idChain.RunningNode.ShardID)]
 					}
+					if idChain.RunningNode == Interfaces.LocalShard.Main() {
+						Interfaces.Communications[Interfaces.MainBegin].Request()
+					}
+					success = true
 				} else {
 					success = Con.HandleMsg(msg)
 				}
@@ -105,5 +100,6 @@ func Init() {
 		Interfaces.Con[config.IdMod] = pbft.NewIdChainCon()
 	}
 	Interfaces.Con[config.PyrMod] = pbft.NewPyramidCon()
-	Interfaces.Con[config.FideMod] = pbft.NewFideBehavior()
+	Interfaces.Con[config.FideMod] = pbft.NewMonofideCon()
+
 }

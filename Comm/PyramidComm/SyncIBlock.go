@@ -37,7 +37,7 @@ func (com *SyncIBlockCom) Request(...*[]byte) bool {
 			crypt.UintToBytes(uint64(len(block.Body().Txs())))) //replica node will broadcast the blockHash
 	}
 	for _, idx := range bIndexes {
-		for _, node := range pyramid.GlobalPyrShards[idx].NodeMap {
+		for _, node := range pyramid.GlobalShards[idx].NodeMap {
 			addr := node.IpAddr
 			con.SendMsg(&message.Message{
 				Type:       Interfaces.SyncIBlock.RequestType(),
@@ -53,8 +53,8 @@ func (com *SyncIBlockCom) HandleRequest(msg *message.Message) bool {
 	com.lock.Lock()
 	defer com.lock.Unlock()
 	remoteNode := idChain.IDC.NodeMap[msg.RemoteInfo]
-	remoteShard := pyramid.GlobalPyrShards[remoteNode.ShardID]
-	RemoteSID := remoteShard.Id
+	remoteShard := pyramid.GlobalShards[remoteNode.ShardID]
+	RemoteSID := remoteShard.Id()
 	if com.reqCnt[RemoteSID] == nil {
 		com.blocks[RemoteSID] = make(map[crypt.Hash]Block.Block)
 		com.reqCnt[RemoteSID] = make(map[crypt.Hash]uint64)
@@ -92,13 +92,13 @@ func (com *SyncIBlockCom) HandleRequest(msg *message.Message) bool {
 		//blockLen = int(crypt.BytesToUint(contents[1]))
 		hash = *crypt.NewHash(byteBlockHash)
 	}
-	//storage.CommLogger.Writef("block<%v>Ack%v from %v (%v/%v), block received:%v", blockLen, remoteShard.Id, remoteNode.IpAddr, com.reqCnt[RemoteSID][hash], remoteShard.Threshold(), com.blocks[RemoteSID][hash] != nil)
+	//storage.CommLogger.Writef("block<%v>Ack%v from %v (%v/%v), block received:%v", blockLen, remoteShard.sid, remoteNode.IpAddr, com.reqCnt[RemoteSID][hash], remoteShard.Threshold(), com.blocks[RemoteSID][hash] != nil)
 	if com.finish[RemoteSID][hash] == true {
-		//log.Printf("blockAck%v(old) from %v (%v/%v)", remoteShard.Id, remoteNode.IpAddr, com.reqCnt[RemoteSID][hash], remoteShard.Threshold())
+		//log.Printf("blockAck%v(old) from %v (%v/%v)", remoteShard.sid, remoteNode.IpAddr, com.reqCnt[RemoteSID][hash], remoteShard.Threshold())
 		return true
 	}
 	com.reqCnt[RemoteSID][hash]++
-	//log.Printf("block<%v>Ack%v from %v (%v/%v), block received:%v", blockLen, remoteShard.Id, remoteNode.IpAddr, com.reqCnt[RemoteSID][hash], remoteShard.Threshold(), com.blocks[RemoteSID][hash] != nil)
+	//log.Printf("block<%v>Ack%v from %v (%v/%v), block received:%v", blockLen, remoteShard.sid, remoteNode.IpAddr, com.reqCnt[RemoteSID][hash], remoteShard.Threshold(), com.blocks[RemoteSID][hash] != nil)
 
 	com.CheckBlock(RemoteSID)
 	return true
@@ -108,7 +108,7 @@ func (com *SyncIBlockCom) CheckBlock(rid int) {
 	for hash, cnt := range com.reqCnt[rid] {
 		b := com.blocks[rid][hash]
 		block, _ := b.(*Block.StdBlock)
-		if block == nil || cnt < pyramid.GlobalPyrShards[rid].Threshold() {
+		if block == nil || cnt < pyramid.GlobalShards[rid].Threshold() {
 			continue
 		}
 		if pyramid.GetBlock(block.H.ParentHashes[rid]) != nil {

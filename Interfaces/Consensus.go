@@ -20,4 +20,4 @@ type Consensus interface {
 	Id() int
 }
 
-var Con = make([]Consensus, 4)
+var Con = make(map[int]Consensus)

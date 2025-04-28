@@ -101,7 +101,7 @@ func SplitMessage(message []byte) (MessageType, []byte) {
 	return MessageType(msgType), content
 }
 
-var NewEpoch RequestType
+var EpochReset RequestType
 
 var InternalTx RequestType = "InternalTx"
 var FideTx RequestType = "FideTx"
