@@ -78,14 +78,26 @@ func (op *EpochResetOpt) Verify(vars [][]byte) bool {
 
 func (op *EpochResetOpt) Execute() {
 	timeStamp := time.Now()
+	log.Println("EpochResetOpt execute begin")
 	idChain.IDC.Append(op.block)
 	if config.IdConfig.UsingPoW() {
 		Interfaces.Con[config.IdMod].(*pow.NakamotoPoW).UpdateDifficulty(op.block.Head())
 	}
 	idChain.RunningNode.PrintNode()
 	EpochInit()
+	go EpochCountDown(config.EpochTime)
+	CrossBegin()
 	log.Printf("--->>> update blockchain%v", time.Since(timeStamp))
 	return
+}
+
+func CrossBegin() {
+	if config.EnableDelayTable {
+		config.NDelay = config.DT[int(idChain.RunningNode.ShardID)]
+	}
+	if idChain.RunningNode == Interfaces.LocalShard.Main() {
+		Interfaces.Communications[Interfaces.MainBegin].Request()
+	}
 }
 
 func EpochInit() {
@@ -108,7 +120,6 @@ func EpochInit() {
 		case config.ClassicRely:
 			globalShards[i] = new(Relay.Shard)
 			conId = config.RelayMod
-			log.Panic("Not implemented")
 		default:
 			log.Printf("Warning::No cross-consensus")
 			inited = false
@@ -126,12 +137,17 @@ func EpochInit() {
 		for i, s := range Interfaces.GlobalShards {
 			pyramid.GlobalShards[i] = s.(*pyramid.Shard)
 		}
-		//ret.InitOriginBlocks()
 	case config.UniRelay:
 		Monosulfide.LocalShard = Interfaces.LocalShard.(*Monosulfide.Shard)
 		Monosulfide.GlobalShards = make([]*Monosulfide.Shard, sNum)
 		for i, s := range Interfaces.GlobalShards {
 			Monosulfide.GlobalShards[i] = s.(*Monosulfide.Shard)
+		}
+	case config.ClassicRely:
+		Relay.LocalShard = Interfaces.LocalShard.(*Relay.Shard)
+		Relay.GlobalShards = make([]*Relay.Shard, sNum)
+		for i, s := range Interfaces.GlobalShards {
+			Relay.GlobalShards[i] = s.(*Relay.Shard)
 		}
 	default:
 		log.Printf("Warning::No cross-consensus")
@@ -142,7 +158,6 @@ func EpochInit() {
 	}
 	log.Printf("New main node is: %v", idChain.IDC.Main().IpAddr)
 	log.Printf("---->>>>RandGen timeCost:%v", time.Since(timeStamp))
-	go EpochCountDown(config.EpochTime)
 
 	//go Interfaces.Con[config.IdMod].EnableViewChange(config.ViewChangeTime) //ms
 	return
@@ -158,7 +173,7 @@ func RDomain[S Interfaces.Domain](globalShards []S, conId int) S {
 	randNum := idChain.IDC.GetRand()
 	for strPubKey, node := range idChain.IDC.NodeMap {
 		shardId, _ := crypt.HashToRange(randNum, node.NodeId, node.Port(), sNum)
-		if node.Port() == config.ListenPort && config.EnableSpy {
+		if node.Port() == config.MainPort && config.EnableSpy {
 			shardId = config.SpyAtShard
 		}
 		node.ShardID = uint64(shardId)
@@ -196,6 +211,18 @@ func RDomain[S Interfaces.Domain](globalShards []S, conId int) S {
 	return localShard
 }
 
+func EpochCountDown(t time.Duration) {
+	time.Sleep(t)
+	if config.IdConfig.UsingPbft() {
+		if idChain.IsIdMainNode() {
+			Interfaces.Operations[message.EpochReset].Schedule()
+		}
+	} else if config.IdConfig.UsingPoW() {
+		Interfaces.Operations[message.EpochReset].Schedule()
+		log.Printf("Mining on &%v", idChain.IDC.Chain.TopBlock().Hash().String())
+	}
+}
+
 //func RefreshPyrShard() {
 //	// constructing the pyramid shards
 //	shardAmount := config.PyrConf.ShardAmount
@@ -209,7 +236,7 @@ func RDomain[S Interfaces.Domain](globalShards []S, conId int) S {
 //	randNum := idChain.IDC.GetRand()
 //	for strPubKey, node := range idChain.IDC.NodeMap {
 //		shardId, _ := crypt.HashToRange(randNum, node.NodeId, node.Port(), shardAmount)
-//		if node.Port() == config.ListenPort && config.EnableSpy {
+//		if node.Port() == config.MainPort && config.EnableSpy {
 //			shardId = config.SpyAtShard
 //		}
 //		node.ShardID = uint64(shardId)
@@ -250,16 +277,3 @@ func RDomain[S Interfaces.Domain](globalShards []S, conId int) S {
 //	}
 //}
 //
-
-func EpochCountDown(t time.Duration) {
-	if config.IdConfig.UsingPbft() {
-		time.Sleep(t)
-		if idChain.IsIdMainNode() {
-			Interfaces.Operations[message.EpochReset].Schedule()
-		}
-	}
-	if config.IdConfig.UsingPoW() {
-		Interfaces.Operations[message.EpochReset].Schedule()
-		log.Printf("Mining on &%v", idChain.IDC.Chain.TopBlock().Hash().String())
-	}
-}

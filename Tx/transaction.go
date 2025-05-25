@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/big"
 	"strconv"
+	"time"
 )
 
 var SendTxs = message.MessageType(message.PyrPrefix + "SendTxs")
@@ -24,6 +25,7 @@ type Transaction struct {
 	Nonce     uint64
 	Type      int
 	Interface []byte
+	Time      time.Time
 }
 
 func GenMPTRoot(hashes [][]byte) []byte {
@@ -80,27 +82,17 @@ func (tx *Transaction) RInShard() int {
 	if tx.Type == RegisterTx {
 		return 0
 	}
-	addr := tx.Recipient
-	last16Addr := addr[len(addr)-8:]
-	num, err := strconv.ParseUint(last16Addr, 16, 64)
-	if err != nil {
-		log.Panic(err)
-	}
-	if config.PyrConf.Enable {
-		return int(num) % config.PyrConf.ShardAmount
-	} else if config.FideConf.Enable {
-		return int(num) % config.FideConf.ShardAmount
-	} else {
-		log.Printf("WARNING::tx belonging is asked without config")
-		return 0
-	}
+	return _inShard_(tx.Recipient)
 }
 
 func (tx *Transaction) SInShard() int {
 	if tx.Type == RegisterTx {
 		return 0
 	}
-	addr := tx.Sender
+	return _inShard_(tx.Sender)
+}
+
+func _inShard_(addr string) int {
 	last16Addr := addr[len(addr)-8:]
 	num, err := strconv.ParseUint(last16Addr, 16, 64)
 	if err != nil {
@@ -110,6 +102,8 @@ func (tx *Transaction) SInShard() int {
 		return int(num) % config.PyrConf.ShardAmount
 	} else if config.FideConf.Enable {
 		return int(num) % config.FideConf.ShardAmount
+	} else if config.RelayConf.Enable {
+		return int(num) % config.RelayConf.ShardAmount
 	} else {
 		log.Printf("WARNING::tx belonging is asked without config")
 		return 0

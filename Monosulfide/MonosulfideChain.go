@@ -116,7 +116,7 @@ func (mc *MonosulfideChain) Append(block *Block.FideBlock) {
 	var closeProcess = false
 	//mc.TxPool.Print()
 	isLegal := mc.VerifyBlock(block)
-	tBegin := block.Head().Time()
+	//tBegin := block.Head().Time()
 	if isLegal {
 		if block.B.SubBlocks[mc.Id()].CHead == nil {
 			// 本shard发布的块
@@ -146,9 +146,10 @@ func (mc *MonosulfideChain) Append(block *Block.FideBlock) {
 			mc.TxPool.RemoveTxs(Txs)
 
 			// 记录交易延迟
-			tIntraCost := time.Since(tBegin)
 			mc.exp.IntraTxAmount += len(Txs)
-			mc.exp.IntraTxDelaySum += tIntraCost * time.Duration(len(Txs))
+			for _, tx := range Txs {
+				mc.exp.IntraTxDelaySum += time.Since(tx.Time)
+			}
 
 			bHash := block.Hash()
 			mc.Blocks[bHash] = block
@@ -208,9 +209,10 @@ func (mc *MonosulfideChain) Append(block *Block.FideBlock) {
 					mc.TxPool.RemoveTxs(b.CBody.Txs)
 					// 记录交易延迟
 					CTxAmount := len(b.CBody.Txs)
-					tCTx := time.Since(tBegin)
 					mc.exp.CTxAmount += CTxAmount
-					mc.exp.CTxDelaySum += tCTx * time.Duration(CTxAmount)
+					for _, tx := range b.CBody.Txs {
+						mc.exp.CTxDelaySum += time.Since(tx.Time)
+					}
 				}
 			}
 			if need && !config.ClassRelay {
@@ -310,6 +312,7 @@ func (mc *MonosulfideChain) _verifyRemoteBlock(block *Block.FideBlock) bool {
 	}
 	if block.H.ParentHash != mc.TopBlockHash[blockMaker] {
 		log.Println("Error seq")
+		log.Printf("%v, %v", block.H.ParentHash, mc.TopBlockHash[blockMaker])
 	}
 	return true
 }

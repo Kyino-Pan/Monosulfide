@@ -38,7 +38,7 @@ func killerTicker() {
 }
 
 func NodeKiller() {
-	t := 600 //
+	t := config.TotalDataSize / 400
 	for {
 		select {
 		case <-config.STOPPER:
@@ -55,7 +55,7 @@ func NodeKiller() {
 
 func Trigger() {
 	time.Sleep(time.Second * 2) // waiting for main node init.
-	if launch.Listener.GetListenPort() == config.ListenPort {
+	if launch.Listener.GetListenPort() == config.MainPort {
 		//go NetTester()
 		time.Sleep(config.InitDelay)
 		Interfaces.Operations[message.EpochReset].Schedule()

@@ -2,6 +2,7 @@ package AutoTx
 
 import (
 	"blockEmulator/Monosulfide"
+	"blockEmulator/Relay"
 	"blockEmulator/Tx"
 	"blockEmulator/config"
 	"blockEmulator/idChain"
@@ -40,11 +41,15 @@ func NewTxManager(pool *Tx.Pool) *TxManager {
 func (tm *TxManager) MsgSendingControl() {
 	txFile, err := os.Open(config.FileInput)
 	if err != nil {
-		log.Panic(err)
+		txFile, err = os.Open(config.DockerInput)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	defer txFile.Close()
 	reader := csv.NewReader(txFile)
 	txList := make([]*Tx.Transaction, 0) // save the InternalTxs in this epoch (round)
+	log.Printf("MsgControl")
 	for {
 		data, err := reader.Read()
 		if err == io.EOF {
@@ -89,6 +94,15 @@ func data2tx(data []string, nonce uint64) (*Tx.Transaction, bool) {
 func (tm *TxManager) sending(txList []*Tx.Transaction) {
 	// the InternalTxs will be sent
 	txBuffer := make(map[int][]*Tx.Transaction)
+
+	// 计算每批次应发送的交易数量
+	// 基于每秒注入速率和注入间隔计算
+	intervalInSeconds := float64(config.TxInjectInterval) / float64(time.Second)
+	batchSize := int(float64(config.InjectSpeed) * intervalInSeconds)
+	if batchSize < 1 {
+		batchSize = 1 // 确保至少发送一个交易
+	}
+
 	for txIndex := 0; txIndex <= len(txList); {
 		if txIndex == len(txList) {
 			break
@@ -96,11 +110,12 @@ func (tm *TxManager) sending(txList []*Tx.Transaction) {
 		tx := txList[txIndex]
 		shardIndexes := tx.RelatedShards()
 		for _, shard := range shardIndexes {
+			tx.Time = time.Now()
 			txBuffer[shard] = append(txBuffer[shard], tx)
 		}
 		// both the sender and receiver's shard will receive the tx.
 		txIndex++
-		if txIndex%config.InjectSpeed == 0 || txIndex == len(txList) {
+		if txIndex%batchSize == 0 || txIndex == len(txList) {
 			// send to shard
 			tm.SendTxs(txBuffer)
 			txBuffer = make(map[int][]*Tx.Transaction)
@@ -131,6 +146,15 @@ func (tm *TxManager) SendTxs(txsInShard map[int][]*Tx.Transaction) {
 					RemoteInfo: remoteAddr,
 				})
 			}
+		} else if config.RelayConf.Enable {
+			for _, node := range Relay.GlobalShards[shardId].NodeMap {
+				remoteAddr := node.IpAddr
+				launch.LaunchRelayMsg(&message.Message{
+					Type:       message.SendTxs,
+					Content:    *content,
+					RemoteInfo: remoteAddr,
+				})
+			}
 		}
 	}
 }
@@ -147,6 +171,7 @@ func (tm *TxManager) HandleSendTxs(msg *message.Message) {
 		}
 	}
 	if config.FideConf.Enable {
+		// safety check.
 		for Monosulfide.GlobalShards == nil {
 			time.Sleep(100 * time.Millisecond)
 			cnt++
@@ -163,6 +188,7 @@ func (tm *TxManager) HandleSendTxs(msg *message.Message) {
 }
 
 func (tm *TxManager) SendEOF() {
+	log.Println("SendEOF")
 	if config.PyrConf.Enable || config.FideConf.Enable {
 		for _, node := range idChain.IDC.NodeMap {
 			launch.LaunchIdMsg(&message.Message{

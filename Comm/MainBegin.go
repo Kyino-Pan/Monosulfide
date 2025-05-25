@@ -55,6 +55,7 @@ func (com *MainBeginCom) HandleRequest(*message.Message) bool {
 			config.TxBegin = time.Now()
 			config.CalcComm = true
 		case config.ClassicRely:
+			Interfaces.Con[config.ClassicRely].Enable()
 			if Interfaces.LocalShard.Main() == idChain.RunningNode {
 				go Interfaces.Operations[message.RelayTx].Schedule()
 			}

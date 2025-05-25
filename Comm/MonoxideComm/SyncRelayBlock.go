@@ -1,4 +1,4 @@
-package MonosulfideComm
+package MonoxideComm
 
 import (
 	"blockEmulator/Block"
@@ -13,7 +13,7 @@ import (
 	"sync"
 )
 
-type SyncFideBlockComm struct {
+type SyncSBlockCom struct {
 	con    Interfaces.Consensus
 	reqCnt map[int]map[crypt.Hash]uint64
 	blocks map[int]map[crypt.Hash]Block.Block
@@ -21,14 +21,14 @@ type SyncFideBlockComm struct {
 	lock   sync.Mutex
 }
 
-func (com *SyncFideBlockComm) Type() Interfaces.CommType {
-	return Interfaces.SyncFideBlock
+func (com *SyncSBlockCom) Type() Interfaces.CommType {
+	return Interfaces.SyncXideBlock
 }
 
-func (com *SyncFideBlockComm) Request(...*[]byte) bool {
+func (com *SyncSBlockCom) Request(...*[]byte) bool {
 	con := com.con
 	localChain := Monosulfide.LocalShard.Chain
-	sAmount := config.FideConf.ShardAmount
+	sAmount := config.RelayConf.ShardAmount
 	content := new(message.Content)
 	block := localChain.Blocks[localChain.TopBlockHash[localChain.Id()]].(*Block.FideBlock)
 	for sid := 0; sid < sAmount; sid++ {
@@ -62,7 +62,7 @@ func (com *SyncFideBlockComm) Request(...*[]byte) bool {
 		for _, node := range Monosulfide.GlobalShards[sid].NodeMap {
 			addr := node.IpAddr
 			con.SendMsg(&message.Message{
-				Type:       com.Type().RequestType(),
+				Type:       Interfaces.SyncXideBlock.RequestType(),
 				Content:    *content,
 				RemoteInfo: addr,
 			})
@@ -71,7 +71,7 @@ func (com *SyncFideBlockComm) Request(...*[]byte) bool {
 	return true
 }
 
-func (com *SyncFideBlockComm) HandleRequest(msg *message.Message) bool {
+func (com *SyncSBlockCom) HandleRequest(msg *message.Message) bool {
 	com.lock.Lock()
 	defer com.lock.Unlock()
 	remoteNode := idChain.IDC.NodeMap[msg.RemoteInfo]
@@ -128,7 +128,7 @@ func (com *SyncFideBlockComm) HandleRequest(msg *message.Message) bool {
 	return true
 }
 
-func (com *SyncFideBlockComm) CheckBlock(rid int) {
+func (com *SyncSBlockCom) CheckBlock(rid int) {
 	for hash, ackAmount := range com.reqCnt[rid] {
 		b := com.blocks[rid][hash]
 		if b == nil || ackAmount < Monosulfide.GlobalShards[rid].Threshold() {
@@ -148,15 +148,15 @@ func (com *SyncFideBlockComm) CheckBlock(rid int) {
 	}
 }
 
-func (com *SyncFideBlockComm) Response(...*[]byte) bool {
+func (com *SyncSBlockCom) Response(...*[]byte) bool {
 	return true
 }
 
-func (com *SyncFideBlockComm) HandleResponse(*message.Message) {
+func (com *SyncSBlockCom) HandleResponse(*message.Message) {
 	log.Panic()
 }
 
-func (com *SyncFideBlockComm) Reset(con Interfaces.Consensus) Interfaces.CommType {
+func (com *SyncSBlockCom) Reset(con Interfaces.Consensus) Interfaces.CommType {
 	com.con = con
 	com.reqCnt = make(map[int]map[crypt.Hash]uint64)
 	com.blocks = make(map[int]map[crypt.Hash]Block.Block)

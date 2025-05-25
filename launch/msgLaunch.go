@@ -37,6 +37,10 @@ func LaunchFideMsg(m *message.Message) {
 	SignAndLaunch(m, config.FideMod)
 }
 
+func LaunchRelayMsg(m *message.Message) {
+	SignAndLaunch(m, config.RelayMod)
+}
+
 func SignAndLaunch(m *message.Message, id int) {
 	(*message.Content)(&m.Content).Sign(idChain.RunningNode.StrKey()).Sign(strconv.Itoa(id))
 	LaunchPool <- m

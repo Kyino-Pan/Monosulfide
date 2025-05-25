@@ -23,7 +23,7 @@ func (com *RegisterCom) Type() Interfaces.CommType {
 
 func (com *RegisterCom) Request(...*[]byte) bool {
 	con := com.con
-	if launch.Listener.GetListenPort() == config.ListenPort {
+	if launch.Listener.GetListenPort() == config.MainPort {
 		// If is the first node in the system.
 		idChain.InitNode(true)
 		return true
@@ -31,8 +31,9 @@ func (com *RegisterCom) Request(...*[]byte) bool {
 	con.SendMsg(&message.Message{
 		Type:       Interfaces.Register.RequestType(),
 		Content:    *message.NewStrContent(launch.Listener.GetLocalAddr()),
-		RemoteInfo: config.DnsAddr + ":" + config.ListenPort,
+		RemoteInfo: config.DnsAddr + ":" + config.MainPort,
 	})
+	log.Printf("Sending register request to %s", config.DnsAddr+":"+config.MainPort)
 	return true
 }
 

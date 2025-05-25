@@ -36,7 +36,7 @@ func SelectMain(d Domain) *idChain.Node {
 	newIdMainNodeID := crypt.PubKey2Str(idChain.SelectRandomKey(d.GetMap(), randNum))
 	if config.EnableSpy == true && d.Id() == config.SpyAtShard && config.SpyIsMainNode {
 		for _, node := range d.GetMap() {
-			if node.Port() == config.ListenPort {
+			if node.Port() == config.MainPort {
 				d.SetMain(node)
 				break
 			}

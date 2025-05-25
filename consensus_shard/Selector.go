@@ -71,12 +71,6 @@ func Selector() {
 				} else if msgType == message.TxEOF {
 					config.ManagerFinished = true
 					fmt.Println("_________TX-FINISH_________")
-					if config.EnableDelayTable {
-						config.NDelay = config.DT[int(idChain.RunningNode.ShardID)]
-					}
-					if idChain.RunningNode == Interfaces.LocalShard.Main() {
-						Interfaces.Communications[Interfaces.MainBegin].Request()
-					}
 					success = true
 				} else {
 					success = Con.HandleMsg(msg)
@@ -84,7 +78,7 @@ func Selector() {
 			}
 			if state <= 0 || success == false {
 				// record the msg in case that receiving pbftMsg before the successMsg arrive
-				log.Printf("Selector::%v,%v to msg buffer", string(msg.Type), msg.RemoteInfo)
+				log.Printf("Selector%v::%v,%v to msg buffer", state, string(msg.Type), msg.RemoteInfo)
 				(*message.Content)(&msg.Content).Sign(remoteId).Sign(modeStr)
 				launch.MsgBuffer = append(launch.MsgBuffer, msg)
 			}
@@ -100,6 +94,6 @@ func Init() {
 		Interfaces.Con[config.IdMod] = pbft.NewIdChainCon()
 	}
 	Interfaces.Con[config.PyrMod] = pbft.NewPyramidCon()
-	Interfaces.Con[config.FideMod] = pbft.NewMonofideCon()
-
+	Interfaces.Con[config.FideMod] = pbft.NewMonosulfideCon()
+	Interfaces.Con[config.RelayMod] = pbft.NewRelayCon()
 }

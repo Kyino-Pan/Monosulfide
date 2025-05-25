@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 )
 
 type Pool struct {
@@ -18,15 +19,7 @@ type Pool struct {
 }
 
 func NewTxPool(localIndex int) *Pool {
-	var amount = 0
-	if config.PyrConf.Enable {
-		amount = config.PyrConf.ShardAmount
-	} else if config.FideConf.Enable {
-		amount = config.FideConf.ShardAmount
-	} else {
-		amount = 1
-		log.Printf("WARNING::Pool is set without config")
-	}
+	var amount = config.ShardAmount
 	ret := &Pool{
 		TxLists: make([][]*List, amount),
 		local:   uint(localIndex),
@@ -50,6 +43,7 @@ func (pool *Pool) Append(tx *Transaction) {
 	defer pool.lock.Unlock()
 	s := tx.SInShard()
 	r := tx.RInShard()
+	tx.Time = time.Now()
 	if config.PyrConf.Enable {
 		if config.PyrConf.InRoute(pool.localIndex, tx.RInShard(), tx.SInShard()) {
 			// 如果localShard是relay路径上的
