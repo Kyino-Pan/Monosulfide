@@ -64,7 +64,7 @@ func TcpListen() {
 			continue
 		} else {
 			Listener = NewNetListener(ln)
-			if cnt == 0 {
+			if Listener.GetListenPort() == config.MainPort {
 				storage.MergeCsv() //merge previous work
 			}
 			storage.Init(cnt)
@@ -76,7 +76,7 @@ func TcpListen() {
 
 func (nl *NetListener) Hearing() {
 	storage.CommLogger.Writef("---TCP Listening on: %v", nl.GetListenPort())
-	log.Printf("---TCP Listening on: %v", Listener.GetListenPort())
+	log.Printf("---TCP Listening on: %v", Listener.GetLocalAddr())
 	go LaunchPad()
 	for {
 		conn, err := nl.tcpListener.Accept()

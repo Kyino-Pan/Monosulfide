@@ -27,6 +27,7 @@ const (
 	Register      CommType = "Register"
 	SyncIBlock    CommType = "SyncIBlock"
 	SyncFideBlock CommType = "SyncFideBlock"
+	SyncXideBlock CommType = "SyncXideBlock"
 	ViewChange    CommType = "ViewChange"
 )
 

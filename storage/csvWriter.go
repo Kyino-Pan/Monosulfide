@@ -138,7 +138,6 @@ func Merge() error {
 				secondColumn = append(secondColumn, record[1])
 			}
 		}
-
 		// 打开输出文件，准备写入数据
 		outFile, err := os.OpenFile(outputFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
@@ -171,7 +170,6 @@ func MergeCsv() {
 		if _, err := os.Stat(fileName); os.IsNotExist(err) {
 			break // 如果文件不存在，停止搜索
 		}
-
 		// 打开文件
 		file, err := os.Open(fileName)
 		if err != nil {
@@ -205,7 +203,6 @@ func MergeCsv() {
 		timeJ, _ := time.Parse("15:04:05.000000", allRecords[j][0])
 		return timeI.Before(timeJ)
 	})
-
 	// 创建合并后的 CSV 文件
 	// 创建带有时间戳的合并后的 CSV 文件名
 	currentTime := time.Now().Format("20060102_150405") // 格式化为 YYYYMMDD_HHMMSS
@@ -236,13 +233,11 @@ func MergeCsv() {
 		if _, err := os.Stat(fileName); os.IsNotExist(err) {
 			break // 如果文件不存在，停止删除
 		}
-
 		err := os.Remove(fileName)
 		if err != nil {
 			fmt.Printf("删除文件 %s 时出错: %v\n", fileName, err)
 			continue
 		}
-
 		fmt.Printf("已删除文件 %s\n", fileName)
 	}
 }

@@ -139,11 +139,18 @@ func NewPyramidCon() *ConPbft {
 	return ret
 }
 
-func NewMonofideCon() Interfaces.Consensus {
+func NewMonosulfideCon() Interfaces.Consensus {
 	ret := NewPbftConsensus()
 	ret.legalNodesAddr = config.FideRunningAddr
 	ret.printFlag = false
 	ret.id = config.FideMod
+	return ret
+}
+func NewRelayCon() Interfaces.Consensus {
+	ret := NewPbftConsensus()
+	ret.legalNodesAddr = config.MonoxideRunningAddr
+	ret.printFlag = false
+	ret.id = config.RelayMod
 	return ret
 }
 

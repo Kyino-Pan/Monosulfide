@@ -90,5 +90,5 @@ func GenTestSh(numTasks int, shardNum int) {
 	}
 
 	fmt.Println("Script generated successfully.")
-	storage.MergeCsv()
+	//storage.MergeCsv()
 }

@@ -3,6 +3,7 @@ package Comm
 import (
 	"blockEmulator/Comm/IdChainComm"
 	"blockEmulator/Comm/MonosulfideComm"
+	"blockEmulator/Comm/MonoxideComm"
 	"blockEmulator/Comm/PyramidComm"
 	"blockEmulator/Interfaces"
 	"blockEmulator/config"
@@ -35,8 +36,13 @@ func Init() {
 
 	if config.FideConf.Enable {
 		monosulfide := Interfaces.Con[config.FideMod]
-		Deploy(new(MonosulfideComm.SyncSBlockCom), monosulfide)
+		Deploy(new(MonosulfideComm.SyncFideBlockComm), monosulfide)
 		Deploy(new(MainBeginCom), monosulfide)
 		Deploy(new(PingCom), monosulfide)
+	}
+
+	if config.RelayConf.Enable {
+		monoxide := Interfaces.Con[config.RelayMod]
+		Deploy(new(MonoxideComm.SyncSBlockCom), monoxide)
 	}
 }

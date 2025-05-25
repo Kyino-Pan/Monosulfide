@@ -8,8 +8,12 @@ type RelayConfig struct {
 }
 
 func InitRelayConfig() *RelayConfig {
-	return &RelayConfig{
+	ret := &RelayConfig{
 		ShardAmount: 8,
 		Enable:      false,
 	}
+	if CrossShardConsensus == ClassicRely {
+		ret.Enable = true
+	}
+	return ret
 }

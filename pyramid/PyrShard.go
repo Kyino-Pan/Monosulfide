@@ -103,7 +103,7 @@ func (sh *Shard) SelectMain() *idChain.Node {
 	sh.mainNode = sh.NodeMap[newIdMainNodeID]
 	if config.EnableSpy == true && sh.Id() == config.SpyAtShard && config.SpyIsMainNode {
 		for _, node := range sh.NodeMap {
-			if node.Port() == config.ListenPort {
+			if node.Port() == config.MainPort {
 				sh.mainNode = node
 				break
 			}
