@@ -22,14 +22,14 @@ const (
 
 const (
 	EpochTime = time.Duration(999) * time.Second
-	InitDelay = time.Duration(24) * time.Second
+	InitDelay = time.Duration(60) * time.Second
 
-	ExitDelay = time.Duration(24) * time.Second
+	ExitDelay = time.Duration(60) * time.Second
 	MainPort  = "20000"
 
-	ViewChangeTime   = 80000                                      //ms
-	FileInput        = `../2000000to2999999_BlockTransaction.csv` //the raw BlockTransaction data path
-	DockerInput      = `./2000000to2999999_BlockTransaction.csv`
+	ViewChangeTime   = 80000                                           //ms
+	FileInput        = `~/data1/2000000to2999999_BlockTransaction.csv` //the raw BlockTransaction data path
+	DockerInput      = `~/data1/2000000to2999999_BlockTransaction.csv`
 	OutputPath       = "./output/"
 	PrivateKeyPEM    = "./privateKeyPEM.txt"
 	PublicKeyPEM     = "./publicKeyPEM.txt"

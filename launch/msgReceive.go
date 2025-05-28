@@ -54,6 +54,7 @@ func TcpListen() {
 	config.InitNetDelay()
 	cnt := 0
 	for {
+		// log.Printf("TcpListen::Trying to bint to: %v", config.Localhost+":"+strconv.Itoa(port))
 		ln, err := net.Listen("tcp", config.Localhost+":"+strconv.Itoa(port))
 		if err != nil {
 			port += 10
