@@ -25,6 +25,9 @@ func Init() {
 
 	Fide := Interfaces.Con[config.FideMod]
 	Deploy(new(FideTxOpt), Fide)
+
+	Monoxide := Interfaces.Con[config.RelayMod]
+	Deploy(new(RelayTxOpt), Monoxide)
 }
 
 func Propose(con Interfaces.Consensus, reqType message.RequestType, vars ...*[]byte) {

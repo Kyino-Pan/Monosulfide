@@ -46,6 +46,8 @@ const (
 
 	PyrPrefix string = "PY"
 
+	EasyPoWBroadcast = "EasyPoWBroadcast"
+
 	SyncIdChain MessageType = "SyncShard"
 	NodeSilence MessageType = "NodeSilence"
 	TxEOF                   = MessageType("TxEOF")

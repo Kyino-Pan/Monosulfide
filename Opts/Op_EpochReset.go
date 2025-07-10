@@ -6,13 +6,13 @@ import (
 	"blockEmulator/Interfaces"
 	"blockEmulator/Monosulfide"
 	"blockEmulator/Proposals"
-	"blockEmulator/Relay"
 	"blockEmulator/config"
 	"blockEmulator/consensus_shard/pow"
 	"blockEmulator/crypt"
 	"blockEmulator/idChain"
 	"blockEmulator/launch"
 	"blockEmulator/message"
+	"blockEmulator/monoxide"
 	"blockEmulator/pyramid"
 	"blockEmulator/storage"
 	"log"
@@ -86,7 +86,6 @@ func (op *EpochResetOpt) Execute() {
 	idChain.RunningNode.PrintNode()
 	EpochInit()
 	go EpochCountDown(config.EpochTime)
-	CrossBegin()
 	log.Printf("--->>> update blockchain%v", time.Since(timeStamp))
 	return
 }
@@ -95,7 +94,7 @@ func CrossBegin() {
 	if config.EnableDelayTable {
 		config.NDelay = config.DT[int(idChain.RunningNode.ShardID)]
 	}
-	if idChain.RunningNode == Interfaces.LocalShard.Main() {
+	if idChain.RunningNode == Interfaces.LocalShard.Main() || config.MonoxideConf.Enable || config.FideConf.Enable {
 		Interfaces.Communications[Interfaces.MainBegin].Request()
 	}
 }
@@ -117,8 +116,8 @@ func EpochInit() {
 		case config.UniRelay:
 			globalShards[i] = new(Monosulfide.Shard)
 			conId = config.FideMod
-		case config.ClassicRely:
-			globalShards[i] = new(Relay.Shard)
+		case config.ClassicRelay:
+			globalShards[i] = new(monoxide.Shard)
 			conId = config.RelayMod
 		default:
 			log.Printf("Warning::No cross-consensus")
@@ -143,11 +142,11 @@ func EpochInit() {
 		for i, s := range Interfaces.GlobalShards {
 			Monosulfide.GlobalShards[i] = s.(*Monosulfide.Shard)
 		}
-	case config.ClassicRely:
-		Relay.LocalShard = Interfaces.LocalShard.(*Relay.Shard)
-		Relay.GlobalShards = make([]*Relay.Shard, sNum)
+	case config.ClassicRelay:
+		monoxide.LocalShard = Interfaces.LocalShard.(*monoxide.Shard)
+		monoxide.GlobalShards = make([]*monoxide.Shard, sNum)
 		for i, s := range Interfaces.GlobalShards {
-			Relay.GlobalShards[i] = s.(*Relay.Shard)
+			monoxide.GlobalShards[i] = s.(*monoxide.Shard)
 		}
 	default:
 		log.Printf("Warning::No cross-consensus")

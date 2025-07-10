@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	shardAmount = 6
-	PyrConf     = InitShardConfig()
+	PyrShardAmount = 6
+	PyrConf        = InitShardConfig()
 )
 
 type PyramidConfig struct {
@@ -146,11 +146,11 @@ func (conf *PyramidConfig) GetRoute(s, r int) []int {
 
 func InitShardConfig() *PyramidConfig {
 	conf := new(PyramidConfig)
-	conf.ShardAmount = shardAmount
-	conf.ShardDistribution = make([][]bool, shardAmount)
+	conf.ShardAmount = PyrShardAmount
+	conf.ShardDistribution = make([][]bool, PyrShardAmount)
 	dis := conf.ShardDistribution
-	for i := 0; i < shardAmount; i++ {
-		dis[i] = make([]bool, shardAmount)
+	for i := 0; i < PyrShardAmount; i++ {
+		dis[i] = make([]bool, PyrShardAmount)
 		dis[i][i] = true
 	}
 	dis[3][0] = true
@@ -160,8 +160,8 @@ func InitShardConfig() *PyramidConfig {
 	dis[4][2] = true
 	dis[4][5] = true
 	//
-	//for i := 0; i < shardAmount; i++ {
-	//	dis[shardAmount-1][i] = true
+	//for i := 0; i < PyrShardAmount; i++ {
+	//	dis[PyrShardAmount-1][i] = true
 	//}
 	err := conf.checkConnectivity()
 	if err != nil {
@@ -171,8 +171,8 @@ func InitShardConfig() *PyramidConfig {
 	if CrossShardConsensus == Pyramid {
 		conf.Enable = true
 	}
-	conf.DefaultAddr = make([]string, shardAmount)
-	for i := 0; i < shardAmount; i++ {
+	conf.DefaultAddr = make([]string, PyrShardAmount)
+	for i := 0; i < PyrShardAmount; i++ {
 		conf.DefaultAddr[i] = GenerateShardAddress(i)
 	}
 	//}
@@ -182,7 +182,7 @@ func InitShardConfig() *PyramidConfig {
 
 // GenerateShardAddress generates a default address for a given shardID
 func GenerateShardAddress(shardID int) string {
-	if shardID < 0 || shardID >= shardAmount {
+	if shardID < 0 || shardID >= PyrShardAmount {
 		panic("Invalid shardID")
 	}
 	// 使用 shardID 创建一个唯一的地址 (例如: 基于 hash)

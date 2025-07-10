@@ -146,13 +146,6 @@ func NewMonosulfideCon() Interfaces.Consensus {
 	ret.id = config.FideMod
 	return ret
 }
-func NewRelayCon() Interfaces.Consensus {
-	ret := NewPbftConsensus()
-	ret.legalNodesAddr = config.MonoxideRunningAddr
-	ret.printFlag = false
-	ret.id = config.RelayMod
-	return ret
-}
 
 func (con *ConPbft) seq() uint64 {
 	return con.sequence

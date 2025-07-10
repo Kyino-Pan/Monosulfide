@@ -3,7 +3,6 @@ package Comm
 import (
 	"blockEmulator/Interfaces"
 	"blockEmulator/config"
-	"blockEmulator/idChain"
 	"blockEmulator/message"
 	"blockEmulator/pyramid"
 	"log"
@@ -26,6 +25,7 @@ func (com *MainBeginCom) Request(...*[]byte) bool {
 	com.lock.Lock()
 	defer com.lock.Unlock()
 	// Request is only called by main nodes.
+	log.Printf("MainBegin sent")
 	for _, sh := range Interfaces.GlobalShards {
 		com.con.SendMsg(&message.Message{
 			Type:       com.Type().RequestType(),
@@ -44,21 +44,23 @@ func (com *MainBeginCom) HandleRequest(*message.Message) bool {
 	if com.cnt == config.ShardAmount {
 		switch config.CrossShardConsensus {
 		case config.Pyramid:
-			Interfaces.Con[config.Pyramid].Enable()
+			Interfaces.Con[config.PyrMod].Enable()
 			go Interfaces.Operations[message.InternalTx].Schedule()
 			if pyramid.LocalShard.IsBShard() {
 				go pyramid.NxtCrossTx()
 			}
 		case config.UniRelay:
 			Interfaces.Con[config.FideMod].Enable()
-			go Interfaces.Operations[message.FideTx].Schedule()
+			go Interfaces.Con[config.FideMod].Tic()
+			//go Interfaces.Operations[message.FideTx].Schedule()
 			config.TxBegin = time.Now()
 			config.CalcComm = true
-		case config.ClassicRely:
-			Interfaces.Con[config.ClassicRely].Enable()
-			if Interfaces.LocalShard.Main() == idChain.RunningNode {
-				go Interfaces.Operations[message.RelayTx].Schedule()
-			}
+		case config.ClassicRelay:
+			Interfaces.Con[config.RelayMod].Enable()
+			go Interfaces.Con[config.RelayMod].Tic()
+			//if Interfaces.LocalShard.Main() == idChain.RunningNode {
+			//	go Interfaces.Operations[message.RelayTx].Schedule()
+			//}
 		}
 	}
 	return true

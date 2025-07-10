@@ -7,7 +7,6 @@ import (
 	"blockEmulator/crypt"
 	"blockEmulator/idChain"
 	"log"
-	"strconv"
 	"sync"
 )
 
@@ -25,7 +24,7 @@ type Shard struct {
 }
 
 func (sh *Shard) BroadAddr() string {
-	return "MONOSULFIDE_" + strconv.Itoa(sh.sid)
+	return config.IdRunningAddr
 }
 
 func (sh *Shard) Reset(_ int, sid int) {

@@ -28,7 +28,7 @@ func (com *SyncSBlockCom) Type() Interfaces.CommType {
 func (com *SyncSBlockCom) Request(...*[]byte) bool {
 	con := com.con
 	localChain := Monosulfide.LocalShard.Chain
-	sAmount := config.RelayConf.ShardAmount
+	sAmount := config.MonoxideConf.ShardAmount
 	content := new(message.Content)
 	block := localChain.Blocks[localChain.TopBlockHash[localChain.Id()]].(*Block.FideBlock)
 	for sid := 0; sid < sAmount; sid++ {

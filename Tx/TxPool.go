@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"sync"
-	"time"
 )
 
 type Pool struct {
@@ -43,15 +42,15 @@ func (pool *Pool) Append(tx *Transaction) {
 	defer pool.lock.Unlock()
 	s := tx.SInShard()
 	r := tx.RInShard()
-	tx.Time = time.Now()
+	// tx.Time = time.Now()
 	if config.PyrConf.Enable {
 		if config.PyrConf.InRoute(pool.localIndex, tx.RInShard(), tx.SInShard()) {
 			// 如果localShard是relay路径上的
 			txs := SplitRelay(tx)
 			local := pool.localIndex
 			for _, tx := range txs {
-				s = tx.SInShard()
-				r = tx.RInShard()
+				s := tx.SInShard()
+				r := tx.RInShard()
 				if config.PyrConf.ShardDistribution[local][s] || config.PyrConf.ShardDistribution[local][r] {
 					list := pool.TxLists[s][r]
 					list.append(tx)
@@ -172,6 +171,21 @@ func (pool *Pool) PackageCrossTxs() []*Transaction {
 	return transactions
 }
 
+func (pool *Pool) PackageTxsFrom(sid int) []*Transaction {
+	pool.lock.Lock()
+	defer pool.lock.Unlock()
+	var transactions []*Transaction
+	for _, txList := range pool.TxLists[sid] {
+		for _, tx := range txList.txs {
+			transactions = append(transactions, tx)
+		}
+	}
+	if len(transactions) > config.MaxBlockSize {
+		transactions = transactions[:config.MaxBlockSize]
+	}
+	return transactions
+}
+
 func (pool *Pool) PackageCrossTx(dest int) []*Transaction {
 	pool.lock.Lock()
 	defer pool.lock.Unlock()
@@ -190,15 +204,15 @@ func (pool *Pool) RemoveTxs(txs []*Transaction) {
 	}
 	cnt := 0
 	for _, tx := range txs {
-		if pool.txExist(tx) {
+		if pool.TxExist(tx) {
 			cnt++
 		}
 		pool.TxLists[tx.SInShard()][tx.RInShard()].remove(tx)
 	}
-	//log.Printf("%v tx removed. Block contain %v txs", cnt, len(txs))
+	log.Printf("%v tx removed. Block contain %v txs", cnt, len(txs))
 }
 
-func (pool *Pool) txExist(tx *Transaction) bool {
+func (pool *Pool) TxExist(tx *Transaction) bool {
 	txList := pool.TxLists[tx.SInShard()][tx.RInShard()]
 	return txList.TxExist(tx)
 }
@@ -249,6 +263,7 @@ func (pool *Pool) Print() {
 	fmt.Println("----------------")
 
 }
+
 func (tx *Transaction) Encode() []byte {
 	data, err := json.Marshal(tx)
 	if err != nil {

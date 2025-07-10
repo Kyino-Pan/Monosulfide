@@ -5,18 +5,19 @@ import (
 )
 
 var (
-	ShardAmount         = 4
+	ShardAmount         = 8
 	IdChainConsensus    = Pbft
 	IntraShardConsensus = Pbft
-	CrossShardConsensus = UniRelay
-	//CrossShardConsensus = ClassicRely
+	//CrossShardConsensus = UniRelay
+	CrossShardConsensus = ClassicRelay
 	//CrossShardConsensus = Pyramid
 )
 
 const (
-	TxInjectInterval = 50 * time.Millisecond
-	InjectSpeed      = 2048   // 每秒交易注入速率 (transactions per second)
-	TotalDataSize    = 200000 // the total number of txs
+	TxInjectInterval = 0 * time.Millisecond
+	InjectSpeed      = 2048    // 每秒交易注入速率 (transactions per second)
+	TotalDataSize    = 1000000 // the total number of txs
+	PoWExpTime       = 5 * time.Second
 
 	MaxBlockSize = 2048
 	BatchSize    = 16000 // supervisor read a batch of txs then send them, it should be larger than inject speed

@@ -13,18 +13,20 @@ func getEnv(key, fallback string) string {
 }
 
 const (
-	Pbft        = 0
-	PoW         = 1
-	ClassicRely = 1000
-	Pyramid     = 1001
-	UniRelay    = 1002
+	Pbft         = 0
+	PoW          = 1
+	ClassicRelay = 1000
+	Pyramid      = 1001
+	UniRelay     = 1002
 )
+
+var TX_TEST = true
 
 const (
 	EpochTime = time.Duration(999) * time.Second
-	InitDelay = time.Duration(24) * time.Second
+	InitDelay = time.Duration(8) * time.Second
 
-	ExitDelay = time.Duration(24) * time.Second
+	ExitDelay = time.Duration(8) * time.Second
 	MainPort  = "20000"
 
 	ViewChangeTime   = 80000                                      //ms

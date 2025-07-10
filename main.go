@@ -32,6 +32,7 @@ func main() {
 		log.Printf("shardNum = %d", config.ShardAmount)
 	}
 	config.FideConf = config.InitFideConfig()
+	config.MonoxideConf = config.InitMonoxideConfig()
 	if nodeNum != 0 {
 
 	}
@@ -50,7 +51,7 @@ func main() {
 	if config.FideConf.Enable == true {
 		cnt++
 	}
-	if config.RelayConf.Enable == true {
+	if config.MonoxideConf.Enable == true {
 		cnt++
 	}
 	if cnt > 1 {

@@ -3,6 +3,7 @@ package consensus_shard
 import (
 	"blockEmulator/AutoTx"
 	"blockEmulator/Interfaces"
+	"blockEmulator/Opts"
 	"blockEmulator/Tx"
 	"blockEmulator/config"
 	"blockEmulator/consensus_shard/pbft"
@@ -71,6 +72,8 @@ func Selector() {
 				} else if msgType == message.TxEOF {
 					config.ManagerFinished = true
 					fmt.Println("_________TX-FINISH_________")
+					Interfaces.LocalShard.GetTxPool().Print()
+					Opts.CrossBegin()
 					success = true
 				} else {
 					success = Con.HandleMsg(msg)
@@ -94,6 +97,7 @@ func Init() {
 		Interfaces.Con[config.IdMod] = pbft.NewIdChainCon()
 	}
 	Interfaces.Con[config.PyrMod] = pbft.NewPyramidCon()
-	Interfaces.Con[config.FideMod] = pbft.NewMonosulfideCon()
-	Interfaces.Con[config.RelayMod] = pbft.NewRelayCon()
+	//Interfaces.Con[config.FideMod] = pbft.NewMonosulfideCon()
+	Interfaces.Con[config.FideMod] = pow.NewFideCon()
+	Interfaces.Con[config.RelayMod] = pow.NewRelayCon()
 }

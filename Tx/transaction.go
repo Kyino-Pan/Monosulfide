@@ -102,8 +102,8 @@ func _inShard_(addr string) int {
 		return int(num) % config.PyrConf.ShardAmount
 	} else if config.FideConf.Enable {
 		return int(num) % config.FideConf.ShardAmount
-	} else if config.RelayConf.Enable {
-		return int(num) % config.RelayConf.ShardAmount
+	} else if config.MonoxideConf.Enable {
+		return int(num) % config.MonoxideConf.ShardAmount
 	} else {
 		log.Printf("WARNING::tx belonging is asked without config")
 		return 0
@@ -125,10 +125,17 @@ func (tx *Transaction) RelatedShards() []int {
 			}
 		}
 	} else if config.FideConf.Enable {
-		ret = append(ret, s)
-		//if s != r {
-		//	ret = append(ret, r)
-		//}
+		if config.TX_TEST == true {
+			for i := 0; i < config.FideConf.ShardAmount; i++ {
+				ret = append(ret, i)
+			}
+		} else {
+			ret = append(ret, s)
+		}
+	} else if config.MonoxideConf.Enable {
+		for i := 0; i < config.MonoxideConf.ShardAmount; i++ {
+			ret = append(ret, i)
+		}
 	}
 	return ret
 }

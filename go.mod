@@ -1,6 +1,6 @@
 module blockEmulator
 
-go 1.21
+go 1.22
 
 require (
 	github.com/boltdb/bolt v1.3.1

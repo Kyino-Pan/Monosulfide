@@ -8,6 +8,7 @@ import (
 	"blockEmulator/consensus_shard"
 	"blockEmulator/launch"
 	"blockEmulator/message"
+	"log"
 )
 
 import (
@@ -38,15 +39,17 @@ func killerTicker() {
 }
 
 func NodeKiller() {
-	t := config.TotalDataSize / 400
+	t := config.TotalDataSize / 200
 	for {
 		select {
 		case <-config.STOPPER:
 			t--
+			log.Printf("Receive STOPPER")
 			return
 		case <-killer:
 			t--
 			if t == 0 {
+				log.Println("killer killing")
 				return
 			}
 		}

@@ -41,8 +41,9 @@ func Init() {
 		Deploy(new(PingCom), monosulfide)
 	}
 
-	if config.RelayConf.Enable {
+	if config.MonoxideConf.Enable {
 		monoxide := Interfaces.Con[config.RelayMod]
 		Deploy(new(MonoxideComm.SyncSBlockCom), monoxide)
+		Deploy(new(MainBeginCom), monoxide)
 	}
 }

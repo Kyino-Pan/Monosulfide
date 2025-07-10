@@ -1,4 +1,4 @@
-package Relay
+package monoxide
 
 import (
 	"blockEmulator/Block"
@@ -73,8 +73,7 @@ func (sh *Shard) SetViewId(u uint64) {
 }
 
 func (sh *Shard) BroadAddr() string {
-	//TODO implement me
-	panic("implement me")
+	return config.IdRunningAddr
 }
 
 func (sh *Shard) Append(block Block.Block) {

@@ -2,12 +2,12 @@ package AutoTx
 
 import (
 	"blockEmulator/Monosulfide"
-	"blockEmulator/Relay"
 	"blockEmulator/Tx"
 	"blockEmulator/config"
 	"blockEmulator/idChain"
 	"blockEmulator/launch"
 	"blockEmulator/message"
+	"blockEmulator/monoxide"
 	"blockEmulator/pyramid"
 	"encoding/csv"
 	"encoding/json"
@@ -49,7 +49,7 @@ func (tm *TxManager) MsgSendingControl() {
 	defer txFile.Close()
 	reader := csv.NewReader(txFile)
 	txList := make([]*Tx.Transaction, 0) // save the InternalTxs in this epoch (round)
-	log.Printf("MsgControl")
+	//log.Printf("MsgControl")
 	for {
 		data, err := reader.Read()
 		if err == io.EOF {
@@ -146,8 +146,8 @@ func (tm *TxManager) SendTxs(txsInShard map[int][]*Tx.Transaction) {
 					RemoteInfo: remoteAddr,
 				})
 			}
-		} else if config.RelayConf.Enable {
-			for _, node := range Relay.GlobalShards[shardId].NodeMap {
+		} else if config.MonoxideConf.Enable {
+			for _, node := range monoxide.GlobalShards[shardId].NodeMap {
 				remoteAddr := node.IpAddr
 				launch.LaunchRelayMsg(&message.Message{
 					Type:       message.SendTxs,
@@ -189,14 +189,12 @@ func (tm *TxManager) HandleSendTxs(msg *message.Message) {
 
 func (tm *TxManager) SendEOF() {
 	log.Println("SendEOF")
-	if config.PyrConf.Enable || config.FideConf.Enable {
-		for _, node := range idChain.IDC.NodeMap {
-			launch.LaunchIdMsg(&message.Message{
-				Type:       message.TxEOF,
-				Content:    nil,
-				RemoteInfo: node.IpAddr,
-			})
-		}
+	for _, node := range idChain.IDC.NodeMap {
+		launch.LaunchIdMsg(&message.Message{
+			Type:       message.TxEOF,
+			Content:    nil,
+			RemoteInfo: node.IpAddr,
+		})
 	}
 }
 
