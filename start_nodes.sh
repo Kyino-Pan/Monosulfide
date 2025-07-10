@@ -6,7 +6,7 @@ IMAGE_NAME="monosulfide/monosulfide:test"
 
 # 重新编译Go程序并构建最新镜像
 echo "[INFO] 编译最新Go程序..."
-GOOS=linux GOARCH=arm64 go build -o app main.go
+GOOS=linux GOARCH=amd64 go build -o app main.go
 
 # 删除旧镜像（如存在）
 if docker images | grep -q "monosulfide/monosulfide"; then
@@ -22,7 +22,7 @@ docker network create monosulfide-net || true
 mkdir -p log
 
 # 依次对 S=1,2,4,8,16
-for S in 16; do
+for S in 1; do
   node_count=$((S * 4))
   echo "[INFO] 启动 S=$S, 共 $node_count 个节点..."
   node_names=()
@@ -38,10 +38,16 @@ for S in 16; do
       -e LISTEN_PORT=$port \
       -v $(pwd)/../2000000to2999999_BlockTransaction.csv:/app/2000000to2999999_BlockTransaction.csv \
       -v $(pwd)/output:/app/output \
-      $IMAGE_NAME -S $S
-    # 日志后台收集
-    (docker logs -f $name >> ./log/$name.log 2>&1 &)
+      $IMAGE_NAME -S $S &
     node_names+=("$name")
+  done
+  
+  # 等待所有容器启动完成
+  wait
+  
+  # 启动日志收集
+  for name in "${node_names[@]}"; do
+    (docker logs -f $name >> ./log/$name.log 2>&1 &)
   done
   echo "所有节点已启动。用 'docker ps' 查看。日志在 ./log 目录下。"
   # 等待本组所有容器退出

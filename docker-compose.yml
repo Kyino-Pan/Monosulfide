@@ -1,0 +1,276 @@
+version: '3.8'
+services:
+  node_S4_1:
+    image: monosulfide/monosulfide:test
+    networks:
+    - ms-net
+    environment:
+    - LOCALHOST=0.0.0.0
+    - DNSADDR=node_S4_1
+    - LISTEN_PORT=20000
+    volumes:
+    - /home/panyue/project/2000000to2999999_BlockTransaction.csv:/app/2000000to2999999_BlockTransaction.csv
+    - /home/panyue/project/Monosulfide/output:/app/output
+    deploy:
+      replicas: 1
+    command:
+    - -S
+    - '4'
+  node_S4_2:
+    image: monosulfide/monosulfide:test
+    networks:
+    - ms-net
+    environment:
+    - LOCALHOST=0.0.0.0
+    - DNSADDR=node_S4_1
+    - LISTEN_PORT=20010
+    volumes:
+    - /home/panyue/project/2000000to2999999_BlockTransaction.csv:/app/2000000to2999999_BlockTransaction.csv
+    - /home/panyue/project/Monosulfide/output:/app/output
+    deploy:
+      replicas: 1
+    command:
+    - -S
+    - '4'
+  node_S4_3:
+    image: monosulfide/monosulfide:test
+    networks:
+    - ms-net
+    environment:
+    - LOCALHOST=0.0.0.0
+    - DNSADDR=node_S4_1
+    - LISTEN_PORT=20020
+    volumes:
+    - /home/panyue/project/2000000to2999999_BlockTransaction.csv:/app/2000000to2999999_BlockTransaction.csv
+    - /home/panyue/project/Monosulfide/output:/app/output
+    deploy:
+      replicas: 1
+    command:
+    - -S
+    - '4'
+  node_S4_4:
+    image: monosulfide/monosulfide:test
+    networks:
+    - ms-net
+    environment:
+    - LOCALHOST=0.0.0.0
+    - DNSADDR=node_S4_1
+    - LISTEN_PORT=20030
+    volumes:
+    - /home/panyue/project/2000000to2999999_BlockTransaction.csv:/app/2000000to2999999_BlockTransaction.csv
+    - /home/panyue/project/Monosulfide/output:/app/output
+    deploy:
+      replicas: 1
+    command:
+    - -S
+    - '4'
+  node_S4_5:
+    image: monosulfide/monosulfide:test
+    networks:
+    - ms-net
+    environment:
+    - LOCALHOST=0.0.0.0
+    - DNSADDR=node_S4_1
+    - LISTEN_PORT=20040
+    volumes:
+    - /home/panyue/project/2000000to2999999_BlockTransaction.csv:/app/2000000to2999999_BlockTransaction.csv
+    - /home/panyue/project/Monosulfide/output:/app/output
+    deploy:
+      replicas: 1
+    command:
+    - -S
+    - '4'
+  node_S4_6:
+    image: monosulfide/monosulfide:test
+    networks:
+    - ms-net
+    environment:
+    - LOCALHOST=0.0.0.0
+    - DNSADDR=node_S4_1
+    - LISTEN_PORT=20050
+    volumes:
+    - /home/panyue/project/2000000to2999999_BlockTransaction.csv:/app/2000000to2999999_BlockTransaction.csv
+    - /home/panyue/project/Monosulfide/output:/app/output
+    deploy:
+      replicas: 1
+    command:
+    - -S
+    - '4'
+  node_S4_7:
+    image: monosulfide/monosulfide:test
+    networks:
+    - ms-net
+    environment:
+    - LOCALHOST=0.0.0.0
+    - DNSADDR=node_S4_1
+    - LISTEN_PORT=20060
+    volumes:
+    - /home/panyue/project/2000000to2999999_BlockTransaction.csv:/app/2000000to2999999_BlockTransaction.csv
+    - /home/panyue/project/Monosulfide/output:/app/output
+    deploy:
+      replicas: 1
+    command:
+    - -S
+    - '4'
+  node_S4_8:
+    image: monosulfide/monosulfide:test
+    networks:
+    - ms-net
+    environment:
+    - LOCALHOST=0.0.0.0
+    - DNSADDR=node_S4_1
+    - LISTEN_PORT=20070
+    volumes:
+    - /home/panyue/project/2000000to2999999_BlockTransaction.csv:/app/2000000to2999999_BlockTransaction.csv
+    - /home/panyue/project/Monosulfide/output:/app/output
+    deploy:
+      replicas: 1
+    command:
+    - -S
+    - '4'
+  node_S4_9:
+    image: monosulfide/monosulfide:test
+    networks:
+    - ms-net
+    environment:
+    - LOCALHOST=0.0.0.0
+    - DNSADDR=node_S4_1
+    - LISTEN_PORT=20080
+    volumes:
+    - /home/panyue/project/2000000to2999999_BlockTransaction.csv:/app/2000000to2999999_BlockTransaction.csv
+    - /home/panyue/project/Monosulfide/output:/app/output
+    deploy:
+      replicas: 1
+    command:
+    - -S
+    - '4'
+  node_S4_10:
+    image: monosulfide/monosulfide:test
+    networks:
+    - ms-net
+    environment:
+    - LOCALHOST=0.0.0.0
+    - DNSADDR=node_S4_1
+    - LISTEN_PORT=20090
+    volumes:
+    - /home/panyue/project/2000000to2999999_BlockTransaction.csv:/app/2000000to2999999_BlockTransaction.csv
+    - /home/panyue/project/Monosulfide/output:/app/output
+    deploy:
+      replicas: 1
+    command:
+    - -S
+    - '4'
+  node_S4_11:
+    image: monosulfide/monosulfide:test
+    networks:
+    - ms-net
+    environment:
+    - LOCALHOST=0.0.0.0
+    - DNSADDR=node_S4_1
+    - LISTEN_PORT=20100
+    volumes:
+    - /home/panyue/project/2000000to2999999_BlockTransaction.csv:/app/2000000to2999999_BlockTransaction.csv
+    - /home/panyue/project/Monosulfide/output:/app/output
+    deploy:
+      replicas: 1
+    command:
+    - -S
+    - '4'
+  node_S4_12:
+    image: monosulfide/monosulfide:test
+    networks:
+    - ms-net
+    environment:
+    - LOCALHOST=0.0.0.0
+    - DNSADDR=node_S4_1
+    - LISTEN_PORT=20110
+    volumes:
+    - /home/panyue/project/2000000to2999999_BlockTransaction.csv:/app/2000000to2999999_BlockTransaction.csv
+    - /home/panyue/project/Monosulfide/output:/app/output
+    deploy:
+      replicas: 1
+    command:
+    - -S
+    - '4'
+  node_S4_13:
+    image: monosulfide/monosulfide:test
+    networks:
+    - ms-net
+    environment:
+    - LOCALHOST=0.0.0.0
+    - DNSADDR=node_S4_1
+    - LISTEN_PORT=20120
+    volumes:
+    - /home/panyue/project/2000000to2999999_BlockTransaction.csv:/app/2000000to2999999_BlockTransaction.csv
+    - /home/panyue/project/Monosulfide/output:/app/output
+    deploy:
+      replicas: 1
+    command:
+    - -S
+    - '4'
+  node_S4_14:
+    image: monosulfide/monosulfide:test
+    networks:
+    - ms-net
+    environment:
+    - LOCALHOST=0.0.0.0
+    - DNSADDR=node_S4_1
+    - LISTEN_PORT=20130
+    volumes:
+    - /home/panyue/project/2000000to2999999_BlockTransaction.csv:/app/2000000to2999999_BlockTransaction.csv
+    - /home/panyue/project/Monosulfide/output:/app/output
+    deploy:
+      replicas: 1
+    command:
+    - -S
+    - '4'
+  node_S4_15:
+    image: monosulfide/monosulfide:test
+    networks:
+    - ms-net
+    environment:
+    - LOCALHOST=0.0.0.0
+    - DNSADDR=node_S4_1
+    - LISTEN_PORT=20140
+    volumes:
+    - /home/panyue/project/2000000to2999999_BlockTransaction.csv:/app/2000000to2999999_BlockTransaction.csv
+    - /home/panyue/project/Monosulfide/output:/app/output
+    deploy:
+      replicas: 1
+    command:
+    - -S
+    - '4'
+  node_S4_16:
+    image: monosulfide/monosulfide:test
+    networks:
+    - ms-net
+    environment:
+    - LOCALHOST=0.0.0.0
+    - DNSADDR=node_S4_1
+    - LISTEN_PORT=20150
+    volumes:
+    - /home/panyue/project/2000000to2999999_BlockTransaction.csv:/app/2000000to2999999_BlockTransaction.csv
+    - /home/panyue/project/Monosulfide/output:/app/output
+    deploy:
+      replicas: 1
+    command:
+    - -S
+    - '4'
+  node_S8_33:
+    image: monosulfide/monosulfide:test
+    networks:
+    - ms-net
+    environment:
+    - LOCALHOST=node_S8_33
+    - DNSADDR=node_S8_1
+    - LISTEN_PORT=20033
+    volumes:
+    - /home/panyue/project/2000000to2999999_BlockTransaction.csv:/app/2000000to2999999_BlockTransaction.csv
+    - /home/panyue/project/Monosulfide/output:/app/output
+    deploy:
+      replicas: 1
+    command:
+    - -p
+networks:
+  ms-net:
+    external: true
