@@ -66,7 +66,7 @@ func (ch *Chain) GenerateBlock() []Block.Block {
 func (ch *Chain) Append(block *Block.RelayBlock) {
 	ch.lock.Lock()
 	defer ch.lock.Unlock()
-	log.Printf("Append")
+	//log.Printf("Append")
 	//ch.TxPool.Print()
 	isLegal := ch.VerifyBlock(block)
 	sid := block.Nonce()
@@ -98,11 +98,13 @@ func (ch *Chain) Append(block *Block.RelayBlock) {
 					rollBlock = ch.Blocks[rollBlock.(*Block.RelayBlock).H.ParentHash]
 				}
 			} else {
+				if top != ch.Blocks[ch.TopBlockHash[int(sid)]] {
+					log.Panic()
+				}
 				ch.TopBlockHash[int(sid)] = block.Hash()
 				ch.TxPool.RemoveTxs(block.B.Intra)
 			}
 			ch.TopBlockHash[int(sid)] = top.Hash()
-			log.Println(ch.TxPool.Amount())
 		}
 	} else {
 		log.Panic()

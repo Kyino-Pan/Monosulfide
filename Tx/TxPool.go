@@ -209,7 +209,7 @@ func (pool *Pool) RemoveTxs(txs []*Transaction) {
 		}
 		pool.TxLists[tx.SInShard()][tx.RInShard()].remove(tx)
 	}
-	log.Printf("%v tx removed. Block contain %v txs", cnt, len(txs))
+	//log.Printf("%v tx removed. Block contain %v txs", cnt, len(txs))
 }
 
 func (pool *Pool) TxExist(tx *Transaction) bool {

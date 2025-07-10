@@ -52,7 +52,7 @@ func (op *RelayTxOpt) Prepare(vars []*[]byte) bool {
 
 func (op *RelayTxOpt) Verify(vars [][]byte) bool {
 	op.opLock.Lock()
-	log.Printf("Verify")
+	//log.Printf("Verify")
 	for _, byteBlock := range vars {
 		b := new(Block.RelayBlock).Decode(byteBlock)
 		if block, ok := b.(*Block.RelayBlock); ok {
@@ -73,7 +73,7 @@ func (op *RelayTxOpt) Verify(vars [][]byte) bool {
 
 func (op *RelayTxOpt) Execute() {
 	defer op.opLock.Unlock()
-	log.Printf("Execute ,temp :%v", len(op.tempBlocks))
+	//log.Printf("Execute ,temp :%v", len(op.tempBlocks))
 	shard := monoxide.LocalShard
 	for _, block := range op.tempBlocks {
 		cnt := 0
@@ -85,14 +85,24 @@ func (op *RelayTxOpt) Execute() {
 		//log.Printf("%v / %v", cnt, len(block.Body().Txs()))
 		shard.Append(block)
 		//log.Printf("Append block%v", i)
-
 	}
+	log.Printf("%v remains.", shard.GetTxPool().Amount())
 	if shard.GetTxPool().Amount() == 0 {
 		space := 0
 		for _, b := range shard.Chain.Blocks {
 			space += len(b.Encode())
 		}
-		log.Printf("SPACE(%v blocks) :: %v\n", len(shard.Chain.Blocks), space)
+		cnt := 0
+		for sid := range config.MonoxideConf.ShardAmount {
+			topH := shard.Chain.TopBlockHash[sid]
+			tempBlock := shard.Chain.Blocks[topH]
+			for tempBlock != shard.Chain.BlockGs[sid] {
+				cnt++
+				tempBlock = shard.Chain.Blocks[tempBlock.(*Block.RelayBlock).H.ParentHash]
+			}
+			cnt++
+		}
+		log.Printf("SPACE(%v blocks)(%v in pivot) :: %v\n", len(shard.Chain.Blocks), cnt, space)
 		log.Printf("TIME :: %v", time.Since(op.con.(*pow.EasyPoW).StartTime))
 		config.STOPPER <- true
 	}
