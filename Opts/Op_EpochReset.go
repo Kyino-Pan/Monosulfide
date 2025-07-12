@@ -93,6 +93,7 @@ func (op *EpochResetOpt) Execute() {
 func CrossBegin() {
 	if config.EnableDelayTable {
 		config.NDelay = config.DT[int(idChain.RunningNode.ShardID)]
+		log.Printf("Network delay is set to %v ms", config.NDelay)
 	}
 	if idChain.RunningNode == Interfaces.LocalShard.Main() || config.MonoxideConf.Enable || config.FideConf.Enable {
 		Interfaces.Communications[Interfaces.MainBegin].Request()
@@ -151,6 +152,7 @@ func EpochInit() {
 	default:
 		log.Printf("Warning::No cross-consensus")
 	}
+
 	if idChain.IsIdMainNode() && inited {
 		log.Println("Start packaging txs")
 		go AutoTx.Manager.MsgSendingControl()

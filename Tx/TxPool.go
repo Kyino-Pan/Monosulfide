@@ -83,12 +83,13 @@ func (pool *Pool) PackageInnerTxs() []*Transaction {
 	return transactions
 }
 
-func (pool *Pool) PackageRelayTxs() [][]*Transaction {
+func (pool *Pool) PackageRelayTxs() ([][]*Transaction, int, int) {
 	pool.lock.RLock()
 	defer pool.lock.RUnlock()
 	var candidateGroups = make([][]*Transaction, config.FideConf.ShardAmount)
+	var bestIndex = pool.FindBest()
 	remain := 0
-	for dest, list := range pool.TxLists[pool.localIndex] {
+	for dest, list := range pool.TxLists[bestIndex] {
 		// 遍历从本地发出的交易
 		var txs = make([]*Transaction, 0)
 		for _, tx := range list.txs {
@@ -119,8 +120,8 @@ func (pool *Pool) PackageRelayTxs() [][]*Transaction {
 		}
 		round++
 	}
-	log.Printf("S%v:%v/%v packaged", pool.localIndex, cnt, remain)
-	return transactions
+	log.Printf("%v/%v (S%v) packaged", cnt, pool.Amount(), bestIndex)
+	return transactions, bestIndex, cnt
 }
 
 func (pool *Pool) PackageCrossTxs() []*Transaction {
@@ -262,6 +263,33 @@ func (pool *Pool) Print() {
 	}
 	fmt.Println("----------------")
 
+}
+
+func (pool *Pool) FindBest() int {
+	maxCnt := -1
+	ret := -1
+	for s, txLists := range pool.TxLists {
+		cnt := 0
+		for _, txList := range txLists {
+			cnt += len(txList.txs)
+		}
+		if cnt > maxCnt {
+			maxCnt = cnt
+			ret = s
+		}
+	}
+	return ret
+}
+
+func (pool *Pool) AppendRelay(intra []*Transaction) {
+	for _, tx := range intra {
+		if tx.Type != RelayDump && tx.SInShard() != tx.RInShard() {
+			ntx := new(Transaction)
+			*ntx = *tx
+			ntx.Type = RelayDump
+			pool.Append(ntx)
+		}
+	}
 }
 
 func (tx *Transaction) Encode() []byte {

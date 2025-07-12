@@ -53,7 +53,6 @@ func (com *MainBeginCom) HandleRequest(*message.Message) bool {
 			Interfaces.Con[config.FideMod].Enable()
 			go Interfaces.Con[config.FideMod].Tic()
 			//go Interfaces.Operations[message.FideTx].Schedule()
-			config.TxBegin = time.Now()
 			config.CalcComm = true
 		case config.ClassicRelay:
 			Interfaces.Con[config.RelayMod].Enable()
@@ -62,6 +61,7 @@ func (com *MainBeginCom) HandleRequest(*message.Message) bool {
 			//	go Interfaces.Operations[message.RelayTx].Schedule()
 			//}
 		}
+		config.TxBegin = time.Now()
 	}
 	return true
 }

@@ -15,14 +15,14 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"time"
 )
 
 var state = 0
 
 func Selector() {
-	timeStamp := time.Now()
+	//timeStamp := time.Now()
 	Interfaces.Communications[Interfaces.Register].Request()
+	begin := false
 	if idChain.RunningNode == idChain.IDC.Main() {
 		state++
 		Interfaces.Con[pbft.IdMod].Enable()
@@ -48,7 +48,7 @@ func Selector() {
 				state++ // todo
 				// this is a bug. But convenient.
 				// Con.Communications[IdInit].Request()
-				log.Printf("--->>>Decode time cost:%v", time.Since(timeStamp))
+				//log.Printf("--->>>Decode time cost:%v", time.Since(timeStamp))
 				launch.ClearMsgBuffer()
 				continue
 			}
@@ -69,11 +69,14 @@ func Selector() {
 				if msgType == message.SendTxs {
 					AutoTx.Manager.HandleSendTxs(msg)
 					success = true
+					if begin == false {
+						begin = true
+						Opts.CrossBegin()
+					}
 				} else if msgType == message.TxEOF {
 					config.ManagerFinished = true
 					fmt.Println("_________TX-FINISH_________")
 					Interfaces.LocalShard.GetTxPool().Print()
-					Opts.CrossBegin()
 					success = true
 				} else {
 					success = Con.HandleMsg(msg)

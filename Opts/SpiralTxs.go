@@ -5,6 +5,7 @@ import (
 	"blockEmulator/Interfaces"
 	"blockEmulator/Monosulfide"
 	"blockEmulator/Proposals"
+	"blockEmulator/consensus_shard/pow"
 	"blockEmulator/idChain"
 	"blockEmulator/message"
 	"log"
@@ -63,7 +64,10 @@ func (op *FideTxOpt) Execute() {
 	shard.Append(op.tempBlock)
 	//shard.Unlock()
 	if Monosulfide.LocalShard.Main() == idChain.RunningNode {
-		Interfaces.Operations[message.FideTx].Schedule()
+		if op.con.(*pow.EasyPoW) == nil {
+			log.Printf("IS not EASYPOW")
+			Interfaces.Operations[message.FideTx].Schedule()
+		}
 	}
 	return
 }

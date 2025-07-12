@@ -16,6 +16,7 @@ type (
 	}
 	FideHead struct {
 		Nonce        uint64
+		ShardIdx     int
 		ParentHash   crypt.Hash // 上一区块Hash
 		IntraTxRoot  []byte     // 片内交易的MerkleRoot
 		SubBlockRoot []byte     // 子Cross块的MerkleRoot
@@ -23,7 +24,6 @@ type (
 		Timestamp    time.Time
 	}
 	FideBody struct {
-		Intra     []*Tx.Transaction
 		SubBlocks []*SubBlock
 	}
 	SubBlock struct {
@@ -31,13 +31,29 @@ type (
 		CBody *CBlockBody
 	}
 	CBlockHead struct {
-		RemoteBlockHash []byte
+		RemoteBlockHash crypt.Hash
 		TxToot          []byte
 	}
 	CBlockBody struct {
 		Txs []*Tx.Transaction
 	}
 )
+
+func (sBody FideBody) Txs() []*Tx.Transaction {
+	ret := make([]*Tx.Transaction, 0)
+	for _, subBlock := range sBody.SubBlocks {
+		if subBlock != nil {
+			if subBlock.CBody != nil {
+				ret = append(ret, subBlock.CBody.Txs...)
+			}
+		}
+	}
+	return ret
+}
+
+func (block *FideBlock) Ref(i int) crypt.Hash {
+	return block.B.SubBlocks[i].CHead.RemoteBlockHash
+}
 
 func (head *FideHead) GetNonce() uint64 {
 	return head.Nonce
@@ -48,7 +64,6 @@ func (head *FideHead) Time() time.Time {
 }
 
 func (block *FideBlock) Light() Block {
-	block.B.Intra = nil
 	for _, b := range block.B.SubBlocks {
 		if b.CBody != nil {
 			b.CBody.Txs = nil
@@ -63,10 +78,6 @@ func (b SubBlock) Hash() crypt.Hash {
 
 func (head *FideHead) TxRoot() []byte {
 	return head.IntraTxRoot
-}
-
-func (sBody FideBody) Txs() []*Tx.Transaction {
-	return sBody.Intra
 }
 
 func (head *FideHead) ParentHashes() map[int]crypt.Hash {
@@ -134,7 +145,6 @@ func _emptyFideBlock() Block {
 			Timestamp:    time.Now(),
 		},
 		B: &FideBody{
-			Intra:     nil,
 			SubBlocks: nil,
 		},
 	}
