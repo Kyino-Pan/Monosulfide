@@ -298,16 +298,18 @@ func (ch *MonosulfideChain) Save() {
 	}
 	avgTCL := (sumC + sumI).Milliseconds() / int64(numC+numI)
 	TPS := float64(numC+numI) / conTime.Seconds()
-	log.Printf("S%v, InjectSpeed = %v, DataSize = %vm PoWExpT = %v",
-		config.FideConf.ShardAmount, config.InjectSpeed, config.TotalDataSize, config.PoWExpTime)
-	log.Printf("Tol: %v txs\nAverage TCL: %v", cnt, avgTCL)
-	log.Printf("IntraTCL = %v", (sumI / time.Duration(numI)).Milliseconds())
-	log.Printf("CrossTCL = %v", (sumC / time.Duration(numC+1)).Milliseconds())
-	log.Printf("TPS: %v ", TPS)
-	log.Printf("Pivot: (%v/%v)", bCnt, len(ch.Blocks))
-	log.Printf("Space : %v", space)
-	log.Printf("Small: %v")
-	log.Printf("Time : %v", time.Now().Sub(config.TxBegin))
+	if idChain.RunningNode.Port() == config.MainPort {
+		log.Printf("S%v, InjectSpeed = %v, DataSize = %vm PoWExpT = %v",
+			config.FideConf.ShardAmount, config.InjectSpeed, config.TotalDataSize, config.PoWExpTime)
+		log.Printf("Tol: %v txs\nAverage TCL: %v", cnt, avgTCL)
+		log.Printf("IntraTCL = %v", (sumI / time.Duration(numI)).Milliseconds())
+		log.Printf("CrossTCL = %v", (sumC / time.Duration(numC+1)).Milliseconds())
+		log.Printf("TPS: %v ", TPS)
+		log.Printf("Pivot: (%v/%v)", bCnt, len(ch.Blocks))
+		log.Printf("Space : %v", space)
+		log.Printf("Small: %v", smallCnt)
+		log.Printf("Time : %v", time.Now().Sub(config.TxBegin))
+	}
 	writer.Writef(strconv.Itoa(numI))
 	writer.Writef(strconv.Itoa(numC))
 	writer.Writef(strconv.Itoa(ch.exp.GenAmount))
