@@ -105,7 +105,7 @@ func (op *RelayTxOpt) Execute() {
 			topH := shard.Chain.TopBlockHash[sid]
 			tempBlock := shard.Chain.Blocks[topH]
 			for tempBlock != shard.Chain.BlockGs[sid] {
-				if float64(len(tempBlock.Body().Txs())) <= (config.MaxBlockSize * 0.1) {
+				if float64(len(tempBlock.Body().Txs())) <= float64(config.MaxBlockSize)*0.1 {
 					smallCnt++
 				}
 				cnt++
@@ -135,7 +135,7 @@ func (op *RelayTxOpt) Execute() {
 			log.Printf("TCL Cross: %v", (SumCTx / time.Duration(CTx)).Milliseconds())
 			log.Printf("TPS: %v", float64(ITx+CTx)/float64(time.Since(config.TxBegin).Milliseconds()))
 			log.Printf("Inject: %v", config.InjectSpeed)
-			log.Printf("Transaction per millisec: %v", config.MaxBlockSize/float64((config.PoWExpTime).Milliseconds())*float64(config.ShardAmount))
+			log.Printf("Transaction per millisec: %v", float64(config.MaxBlockSize)/float64((config.PoWExpTime).Milliseconds())*float64(config.ShardAmount))
 			log.Printf("Check: %v", check)
 		}
 		config.STOPPER <- true

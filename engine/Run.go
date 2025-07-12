@@ -39,7 +39,7 @@ func killerTicker() {
 }
 
 func NodeKiller() {
-	t := config.TotalDataSize / 200
+	t := config.TotalDataSize / 10
 	for {
 		select {
 		case <-config.STOPPER:

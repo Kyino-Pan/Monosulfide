@@ -273,7 +273,7 @@ func (ch *MonosulfideChain) Save() {
 				ITx = len(sub.CBody.Txs)
 			}
 			cnt += len(anc.Body().Txs())
-			if float64(cnt) <= (config.MaxBlockSize * 0.1) {
+			if float64(cnt) <= float64(config.MaxBlockSize)*0.1 {
 				smallCnt++
 			}
 			CTx := len(anc.Body().Txs()) - ITx
