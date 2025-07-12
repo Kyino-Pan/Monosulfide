@@ -125,6 +125,7 @@ func (op *RelayTxOpt) Execute() {
 			cnt++
 		}
 		if idChain.RunningNode.Port() == config.MainPort {
+			log.Printf("MONOXIDE REPORT")
 			log.Printf("SPACE(%v blocks)(%v in pivot) :: %v\n", len(shard.Chain.Blocks), cnt, space)
 			log.Printf("TIME :: %v", time.Since(op.con.(*pow.EasyPoW).StartTime))
 			log.Printf("Under 10per rate: %v", smallCnt)

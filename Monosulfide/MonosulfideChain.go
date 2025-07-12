@@ -299,6 +299,7 @@ func (ch *MonosulfideChain) Save() {
 	avgTCL := (sumC + sumI).Milliseconds() / int64(numC+numI)
 	TPS := float64(numC+numI) / conTime.Seconds()
 	if idChain.RunningNode.Port() == config.MainPort {
+		log.Printf("MONOSULFIDE REPORT")
 		log.Printf("S%v, InjectSpeed = %v, DataSize = %vm PoWExpT = %v",
 			config.FideConf.ShardAmount, config.InjectSpeed, config.TotalDataSize, config.PoWExpTime)
 		log.Printf("Tol: %v txs\nAverage TCL: %v", cnt, avgTCL)
