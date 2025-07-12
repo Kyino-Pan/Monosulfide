@@ -129,9 +129,9 @@ func (op *RelayTxOpt) Execute() {
 			log.Printf("CTx: %v", CTx)
 			log.Printf("TCL Intra: %v", (SumITx / time.Duration(ITx)).Milliseconds())
 			log.Printf("TCL Cross: %v", (SumCTx / time.Duration(CTx)).Milliseconds())
-			log.Printf("TPS: %v", time.Duration(ITx+CTx)/time.Since(config.TxBegin))
+			log.Printf("TPS: %v", float64(ITx+CTx)/float64(time.Since(config.TxBegin).Milliseconds()))
 			log.Printf("Inject: %v", config.InjectSpeed)
-			log.Printf("Transaction per second: %v", config.MaxBlockSize/float64((config.PoWExpTime).Milliseconds())*float64(config.ShardAmount))
+			log.Printf("Transaction per millisec: %v", config.MaxBlockSize/float64((config.PoWExpTime).Milliseconds())*float64(config.ShardAmount))
 		}
 		config.STOPPER <- true
 	}
