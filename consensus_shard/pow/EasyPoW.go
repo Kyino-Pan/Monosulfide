@@ -29,6 +29,7 @@ type EasyPoW struct {
 
 func NewRelayCon() Interfaces.Consensus {
 	ret := NewEasyPoWConsensus(message.RelayTx)
+	config.PoWExpTime = config.PoWExpTime * time.Duration(config.MonoxideConf.ShardAmount)
 	return ret
 }
 func NewFideCon() Interfaces.Consensus {
