@@ -2,7 +2,6 @@ package Monosulfide
 
 import (
 	"blockEmulator/Block"
-	"blockEmulator/Interfaces"
 	"blockEmulator/Tx"
 	"blockEmulator/config"
 	"blockEmulator/crypt"
@@ -28,9 +27,16 @@ type MonosulfideChain struct {
 	TopBlockHash map[int]crypt.Hash
 	blockBuffer  map[int]map[crypt.Hash]*Block.FideBlock
 	//blockAck     map[int]map[int]crypt.Hash // map[i][j]=k means shard i 已经确认shard j的第k个block
-	nonce uint64
-	exp   *Record
-	TxEnd bool
+	nonce    uint64
+	exp      *Record
+	TxEnd    bool
+	BlockGs  []Block.Block
+	Weight   map[crypt.Hash]int
+	Path     map[crypt.Hash][]crypt.Hash
+	refs     map[crypt.Hash][]crypt.Hash
+	updataT  map[crypt.Hash]time.Time
+	Accept   map[int]bool
+	_tempAnc map[crypt.Hash]map[crypt.Hash]Block.Block
 }
 
 type Record struct {
@@ -50,37 +56,28 @@ func (r *Record) Refresh() *Record {
 	return r
 }
 
-func (mc *MonosulfideChain) Id() int {
-	return mc.ownerShard.sid
+func (ch *MonosulfideChain) Id() int {
+	return ch.ownerShard.sid
 }
 
-func (mc *MonosulfideChain) GenerateBlock() Block.Block {
-	mc.lock.RLock()
-	defer mc.lock.RUnlock()
+func (ch *MonosulfideChain) GenerateBlock() Block.Block {
+	ch.lock.RLock()
+	defer ch.lock.RUnlock()
 	cnt := 0
 	subHashes := make([][]byte, config.FideConf.ShardAmount)
 	blockBody := &Block.FideBody{
-		Intra:     nil,
 		SubBlocks: make([]*Block.SubBlock, config.FideConf.ShardAmount),
 	}
-	txsArray := mc.TxPool.PackageRelayTxs()
-	amount := 0
-	for _, txs := range txsArray {
-		amount += len(txs)
+	txsArray, blockIdx, sum := ch.TxPool.PackageRelayTxs()
+	if sum == 0 {
+		ch.Save()
+		return nil
 	}
 	for i := 0; i < config.FideConf.ShardAmount; i++ {
-		// package txs to different shards from txPool
-		if i == LocalShard.sid {
-			innerTx := txsArray[i]
-			blockBody.Intra = innerTx
-			blockBody.SubBlocks[i] = Block.EmptySubBlock()
-			cnt += len(innerTx)
-			continue
-		}
 		txs := txsArray[i]
 		subBlock := &Block.SubBlock{
 			CHead: &Block.CBlockHead{
-				RemoteBlockHash: mc.TopBlockHash[i].Bytes(),
+				RemoteBlockHash: ch.TopBlockHash[i],
 				TxToot:          Tx.GenTxRoot(txs),
 			},
 			CBody: &Block.CBlockBody{Txs: txs},
@@ -91,11 +88,12 @@ func (mc *MonosulfideChain) GenerateBlock() Block.Block {
 	}
 	ret := &Block.FideBlock{
 		H: &Block.FideHead{
-			Nonce:        mc.Nonce() + 1,
-			ParentHash:   mc.TopBlockHash[mc.Id()],
+			Nonce:        ch.Nonce() + 1,
+			ShardIdx:     blockIdx,
+			ParentHash:   ch.TopBlockHash[blockIdx],
 			IntraTxRoot:  Tx.GenTxRoot(blockBody.Txs()),
 			SubBlockRoot: Tx.GenMPTRoot(subHashes),
-			StateRoot:    nil, //todo
+			StateRoot:    Tx.GenMPTRoot(subHashes), //todo
 			Timestamp:    time.Now(),
 		},
 		B: blockBody,
@@ -104,286 +102,131 @@ func (mc *MonosulfideChain) GenerateBlock() Block.Block {
 		// 打包完所有的数据了
 		ret.H.StateRoot = []byte("FINISH")
 	}
-	mc.exp.GenAmount += cnt
-	//ret.Print()
+	log.Printf("%v", ret.Hash())
 	return ret
 }
 
-func (mc *MonosulfideChain) Append(block *Block.FideBlock) {
-	mc.lock.Lock()
-	defer mc.lock.Unlock()
-
-	var closeProcess = false
-	//mc.TxPool.Print()
-	isLegal := mc.VerifyBlock(block)
-	//tBegin := block.Head().Time()
-	if isLegal {
-		if block.B.SubBlocks[mc.Id()].CHead == nil {
-			// 本shard发布的块
-			need := true
-			if block.H.StateRoot != nil {
-				log.Printf("shard%v %v (remaining%v)", mc.Id(), string(block.H.StateRoot),
-					config.FideConf.ShardAmount-len(finishCount))
-				need = false
-				finishCount[mc.Id()] = true
-				if len(finishCount) == config.FideConf.ShardAmount {
-					if LocalShard.Main() == idChain.RunningNode {
-						Interfaces.Communications[Interfaces.SyncFideBlock].Request()
-						LocalShard.Chain.Save()
-					}
-					closeProcess = true
-				}
-				if config.FideConf.ShardAmount-len(finishCount) == 1 {
-					for i := 0; i < config.FideConf.ShardAmount; i++ {
-						if exist, _ := finishCount[i]; !exist {
-							log.Printf("shard %v unfinished", i)
-						}
-					}
-				}
-			}
-			// 如果是本shard发布的block，先只commit片内交易
-			Txs := block.Body().Txs()
-			mc.TxPool.RemoveTxs(Txs)
-
-			// 记录交易延迟
-			mc.exp.IntraTxAmount += len(Txs)
-			for _, tx := range Txs {
-				mc.exp.IntraTxDelaySum += time.Since(tx.Time)
-			}
-
-			bHash := block.Hash()
-			mc.Blocks[bHash] = block
-			mc.TopBlockHash[mc.Id()] = bHash
-			txToCommit := make([]*Tx.Transaction, 0)
-			for sid, b := range block.B.SubBlocks {
-				if sid == mc.Id() {
-					continue
-				}
-				txToCommit = append(txToCommit, b.CBody.Txs...)
-			}
-			mc.LockMoney(txToCommit)
-			mc.recordCBlock(mc.Id(), block)
-			mc.nonce++
-			Interfaces.Communications[Interfaces.SyncFideBlock].Request()
-			if need {
-				mc.storage.AddBlock(block)
-			}
-			block.Light()
-		} else {
-			// 如果是其他shard的block
-			// check block-ack
-			blockMaker := -1
-			for i := 0; i < config.FideConf.ShardAmount; i++ {
-				if block.B.SubBlocks[i].CHead == nil {
-					blockMaker = i
-					if i == mc.Id() {
-						log.Panic()
-						return
-					}
-					break
-				}
-			}
-			if blockMaker == -1 {
-				log.Panic()
-				return
-			}
-			need := true
-			if block.H.StateRoot != nil {
-				need = false
-				log.Printf("shard%v %v", blockMaker, string(block.H.StateRoot))
-				finishCount[blockMaker] = true
-				if len(finishCount) == config.FideConf.ShardAmount || config.TpsTest {
-					if LocalShard.Main() == idChain.RunningNode {
-						LocalShard.Chain.Save()
-					}
-					closeProcess = true
-				}
-			}
-			mc.TopBlockHash[blockMaker] = block.Hash()
-			for id, b := range block.B.SubBlocks {
-				if id == blockMaker {
-					continue
-				}
-				//mc.blockAck[blockMaker][id] = *crypt.NewHash(b.CHead.RemoteBlockHash)
-				if id == mc.Id() {
-					mc.TxPool.RemoveTxs(b.CBody.Txs)
-					// 记录交易延迟
-					CTxAmount := len(b.CBody.Txs)
-					mc.exp.CTxAmount += CTxAmount
-					for _, tx := range b.CBody.Txs {
-						mc.exp.CTxDelaySum += time.Since(tx.Time)
-					}
-				}
-			}
-			if need && !config.ClassRelay {
-				mc.storage.AddBlock(block.Light())
-			}
-		}
-		if closeProcess {
-			config.STOPPER <- true
-		}
-		//mc.TxPool.Print()
-	} else {
-		log.Panic()
+func (ch *MonosulfideChain) Anc(h crypt.Hash) map[crypt.Hash]Block.Block {
+	ret := make(map[crypt.Hash]Block.Block)
+	tempBlock := ch.Blocks[h]
+	if tempBlock == nil {
+		log.Print(".")
 	}
+	sid := tempBlock.Head().(*Block.FideHead).ShardIdx
+	for tempBlock != ch.BlockGs[sid] {
+		ret[tempBlock.Hash()] = tempBlock
+		tempBlock = ch.Blocks[tempBlock.Head().(*Block.FideHead).ParentHash]
+	}
+	ret[ch.BlockGs[sid].Hash()] = ch.BlockGs[sid]
+	return ret
 }
 
-func (mc *MonosulfideChain) VerifyBlock(block *Block.FideBlock) bool {
-	var isLegal bool
-	if block.B.SubBlocks[mc.Id()] == nil {
-		isLegal = mc._verifyLocalBlock(block)
-	} else {
-		isLegal = mc._verifyRemoteBlock(block)
+func (ch *MonosulfideChain) Valid(block *Block.FideBlock) bool {
+	AncS := make([]map[crypt.Hash]Block.Block, config.FideConf.ShardAmount)
+	for i := 0; i < config.FideConf.ShardAmount; i++ {
+		AncS[i] = ch.Anc(block.Ref(i))
 	}
-	return isLegal
-}
-
-func (mc *MonosulfideChain) Nonce() uint64 {
-	return mc.nonce
-}
-
-func (mc *MonosulfideChain) _verifyLocalBlock(block *Block.FideBlock) bool {
-	//todo nonce check
-
-	// check pre-block hash
-	if block.H.ParentHash != mc.TopBlockHash[mc.Id()] {
-		log.Println("ParentHash error")
-		return false
-	}
-	txAll := make([]*Tx.Transaction, 0)
-	//check intraTxs
-	if !bytes.Equal(Tx.GenTxRoot(block.B.Intra), block.H.IntraTxRoot) {
-		log.Println("ConfirmedTxRoot error")
-		return false
-	}
-	txAll = append(txAll, block.B.Intra...)
-
-	//check subBlocks
-	subHashes := make([][]byte, config.FideConf.ShardAmount)
-	for i, subB := range block.B.SubBlocks {
-		if i == mc.Id() {
-			subHashes[i] = []byte("")
+	for i := 0; i < config.FideConf.ShardAmount; i++ {
+		refI := ch.Blocks[block.Ref(i)].(*Block.FideBlock)
+		if refI == ch.BlockGs[i] {
 			continue
 		}
-		subHashes[i] = subB.Hash().Bytes()
-		if !bytes.Equal(subB.CHead.TxToot, Tx.GenTxRoot(subB.CBody.Txs)) {
-			log.Println("subB.TxToot error")
-			return false
+		for j := 0; j < config.FideConf.ShardAmount; j++ {
+			if AncS[j][refI.Ref(j)] == nil {
+				log.Println("REF ERROR")
+				return false
+			}
 		}
-		txAll = append(txAll, subB.CBody.Txs...)
-	}
-	if !bytes.Equal(Tx.GenMPTRoot(subHashes), block.H.SubBlockRoot) {
-		log.Println("SubBlockRoot error")
-		return false
-	}
-
-	//check tx validity
-	if !Tx.IsVaildTxSet(txAll) {
-		log.Println("Balance not enough")
-		return false
 	}
 	return true
 }
 
-func (mc *MonosulfideChain) _verifyRemoteBlock(block *Block.FideBlock) bool {
-	// determined the block proposer
-	var blockMaker = -1
-	for i, b := range block.B.SubBlocks {
-		if b.CHead == nil {
-			blockMaker = i
-			break
+func (ch *MonosulfideChain) Append(block *Block.FideBlock) {
+	ch.lock.Lock()
+	defer ch.lock.Unlock()
+
+	var closeProcess = false
+	//ch.TxPool.Print()
+	isLegal := ch.VerifyBlock(block)
+	sid := block.H.ShardIdx
+	//tBegin := block.Head().Time()
+	if isLegal {
+		ch.storage.AddBlock(block)
+		ch.Blocks[block.Hash()] = block
+		ch.Path[block.H.ParentHash] = append(ch.Path[block.H.ParentHash], block.Hash()) // 记录孩子
+		for i := 0; i < config.FideConf.ShardAmount; i++ {
+			ch.refs[block.Ref(i)] = append(ch.refs[block.Ref(i)], block.Hash()) //记录被引用
 		}
-	}
-	if blockMaker == -1 {
+		tempBlock := block
+		for ch.BlockGs[(sid)] != tempBlock {
+			ch.Weight[tempBlock.Hash()] += 1
+			ch.updataT[tempBlock.Hash()] = time.Now()
+			tempBlock = ch.Blocks[tempBlock.H.ParentHash].(*Block.FideBlock)
+		}
+
+		good := true
+		for i := 0; i < config.FideConf.ShardAmount; i++ {
+			if ch.Anc(ch.TopBlockHash[i])[block.Ref(i)] == nil {
+				good = false
+			}
+		}
+		if block.H.ParentHash == ch.TopBlockHash[sid] && good {
+			ch.TopBlockHash[sid] = block.Hash()
+			ch.TxPool.RemoveTxs(block.B.Txs())
+		} else {
+			log.Println("Forked")
+			ch.FindBestBranches()
+		}
+		if closeProcess {
+			config.STOPPER <- true
+		}
+		//ch.TxPool.Print()
+	} else {
 		log.Panic()
-		return false
 	}
+}
+
+func (ch *MonosulfideChain) VerifyBlock(block *Block.FideBlock) bool {
+	isLegal := ch._verifyRemoteBlock(block)
+
+	if !ch.Valid(block) {
+		isLegal = false
+	}
+	return isLegal
+}
+
+func (ch *MonosulfideChain) Nonce() uint64 {
+	return ch.nonce
+}
+
+func (ch *MonosulfideChain) _verifyRemoteBlock(block *Block.FideBlock) bool {
 	// Check sub-block root and hash-chain only.
 	hashes := make([][]byte, config.FideConf.ShardAmount)
 	for i, b := range block.B.SubBlocks {
-		if i == blockMaker {
-			continue
-		}
 		hashes[i] = b.Hash().Bytes()
 	}
 	if !bytes.Equal(block.H.SubBlockRoot, Tx.GenMPTRoot(hashes)) {
 		log.Println("SubBlockRoot error")
 		return false
 	}
-	if block.H.ParentHash != mc.TopBlockHash[blockMaker] {
-		log.Println("Error seq")
-		log.Printf("%v, %v", block.H.ParentHash, mc.TopBlockHash[blockMaker])
-	}
 	return true
 }
 
-func (mc *MonosulfideChain) LockMoney(commit []*Tx.Transaction) {
-	mc.TxPool.RemoveTxs(commit)
+func (ch *MonosulfideChain) LockMoney(commit []*Tx.Transaction) {
+	ch.TxPool.RemoveTxs(commit)
 	//todo
 }
 
-func (mc *MonosulfideChain) recordCBlock(sid int, block *Block.FideBlock) {
+func (ch *MonosulfideChain) recordCBlock(sid int, block *Block.FideBlock) {
 	hash := block.Hash()
-	mc.blockBuffer[sid][hash] = block
+	ch.blockBuffer[sid][hash] = block
 	if block.Nonce() == 0 {
 		log.Panic()
 	}
 }
 
-//func (sc *MonosulfideChain) ack(sid, ackId int, hash crypt.Hash) {
-//	if b := sc.Blocks[hash]; b != nil {
-//		//log.Printf("S%v B%v already commited.", sid, b.GetNonce())
-//		return
-//	}
-//	for i, subBlock := range sc.blockBuffer[sid][hash].B.SubBlocks {
-//		preAck := sc.blockAck[sid][i]
-//		currBlock := sc.Blocks[hash]
-//		if ackId == sc.sid() {
-//			for {
-//				if currBlock.GetNonce() == preAck {
-//					break
-//				}
-//			}
-//
-//		}
-//		sc.blockAck[sid][i] = preAck
-//
-//	}
-//	sc.blockAck[sid][ackId][hash] += 1
-//	if sc.blockAck[sid][hash] == config.FideConf.Threshold {
-//		block := sc.blockBuffer[sid][hash]
-//		tBegin := block.H.Timestamp
-//		if sid == sc.sid() {
-//			// 执行本shard的转出确认
-//			for sid, b := range block.B.SubBlocks {
-//				if sid == sc.sid() {
-//					continue
-//				}
-//				sc.TxPool.RemoveTxs(b.CBody.Txs)
-//			}
-//			log.Printf("Local %v sub executed.", block.GetNonce())
-//		} else {
-//			//block.Print()
-//			txs := block.B.SubBlocks[sc.sid()].CBody.Txs
-//			sc.TxPool.RemoveTxs(txs)
-//			// 记录交易延迟
-//			CTxAmount := len(txs)
-//
-//			tCTx := time.Since(tBegin)
-//			sc.exp.CTxAmount += CTxAmount
-//			sc.exp.CTxDelaySum += tCTx * time.Duration(CTxAmount)
-//
-//			sc.Blocks[hash] = block
-//			log.Printf("S%v B%v sub executed.", sid, block.GetNonce())
-//		}
-//		delete(sc.blockAck[sid], hash)
-//		delete(sc.blockBuffer[sid], hash)
-//		log.Printf("S%v B%v commited.", sid, block.GetNonce())
-//	}
-//}
-
-func (mc *MonosulfideChain) EncodedExp() *[]byte {
-	bs, err := json.Marshal(mc.exp)
+func (ch *MonosulfideChain) EncodedExp() *[]byte {
+	bs, err := json.Marshal(ch.exp)
 	if err != nil {
 		log.Panic()
 	}
@@ -393,7 +236,7 @@ func (mc *MonosulfideChain) EncodedExp() *[]byte {
 var saved = false
 var lock sync.Mutex
 
-func (mc *MonosulfideChain) Save() {
+func (ch *MonosulfideChain) Save() {
 	lock.Lock()
 	defer lock.Unlock()
 	if idChain.RunningNode != LocalShard.mainNode {
@@ -404,28 +247,73 @@ func (mc *MonosulfideChain) Save() {
 	}
 	saved = true
 	conTime := time.Since(config.TxBegin)
-	writer := storage.NewCsvWriter(0, "Fide-Result-"+strconv.Itoa(mc.Id())+".csv")
+	writer := storage.NewCsvWriter(0, "Fide-Result-"+strconv.Itoa(ch.Id())+".csv")
 	go writer.Run()
 	log.Printf("S%v %v", idChain.RunningNode.ShardID, idChain.RunningNode.IpAddr)
-	log.Print(mc.exp)
-	numI := mc.exp.IntraTxAmount
-	numC := mc.exp.CTxAmount
-	sumI := mc.exp.IntraTxDelaySum
-	sumC := mc.exp.CTxDelaySum
+	//log.Print(ch.exp)
+	numI := ch.exp.IntraTxAmount
+	numC := ch.exp.CTxAmount
+	sumI := time.Duration(0)
+	sumC := time.Duration(0)
+	cnt := 0
+	bCnt := 0
+	for i := 0; i < config.FideConf.ShardAmount; i++ {
+		ancs := ch.Anc(ch.TopBlockHash[i])
+		for _, anc := range ancs {
+			bCnt++
+			if anc == ch.BlockGs[i] {
+				continue
+			}
+			sub := anc.Body().(*Block.FideBody).SubBlocks[i]
+			ITx := 0
+			if sub != nil && sub.CBody != nil {
+				ITx = len(sub.CBody.Txs)
+			}
+			cnt += len(anc.Body().Txs())
+			CTx := len(anc.Body().Txs()) - ITx
+			numI += ITx
+			numC += CTx
+			for j, subB := range anc.Body().(*Block.FideBody).SubBlocks {
+				if j == i {
+					if subB.CBody != nil {
+						for _, tx := range subB.CBody.Txs {
+							sumI += anc.Head().Time().Sub(tx.Time)
+						}
+					}
+				} else {
+					if subB.CBody != nil {
+						for _, tx := range subB.CBody.Txs {
+							sumC += anc.Head().Time().Sub(tx.Time)
+						}
+					}
+				}
+			}
+		}
+	}
+	avgTCL := (sumC + sumI).Milliseconds() / int64(numC+numI)
+	TPS := float64(numC+numI) / conTime.Seconds()
+	log.Printf("S%v, InjectSpeed = %v, DataSize = %vm PoWExpT = %v",
+		config.FideConf.ShardAmount, config.InjectSpeed, config.TotalDataSize, config.PoWExpTime)
+	log.Printf("Tol: %v txs\nAverage TCL: %v", cnt, avgTCL)
+	log.Printf("IntraTCL = %v", (sumI / time.Duration(numI)).Milliseconds())
+	log.Printf("CrossTCL = %v", (sumC / time.Duration(numC+1)).Milliseconds())
+	log.Printf("TPS: %v ", TPS)
+	log.Printf("Pivot: (%v/%v)", bCnt, len(ch.Blocks))
 	writer.Writef(strconv.Itoa(numI))
 	writer.Writef(strconv.Itoa(numC))
-	writer.Writef(strconv.Itoa(mc.exp.GenAmount))
+	writer.Writef(strconv.Itoa(ch.exp.GenAmount))
 	writer.Writef(sumI.String())
 	writer.Writef(sumC.String())
 	writer.Writef("%d", (sumI / time.Duration(numI)).Milliseconds())
 	writer.Writef("%d", (sumC / time.Duration(numC+1)).Milliseconds())
-	writer.Writef("%d", ((sumC + sumI) / time.Duration(numC+numI)).Milliseconds()) // average TCL
-	writer.Writef("%v", float64(numC+numI)/conTime.Seconds())                      // TPS
-	writer.Writef("%.2f", config.CommCalc)                                         // KB
+	writer.Writef("%v", avgTCL)            // average TCL
+	writer.Writef("%v", TPS)               // TPS
+	writer.Writef("%.2f", config.CommCalc) // KB
 	writer.Writef(strconv.Itoa(config.TotalDataSize) + "Txs")
 	writer.Writef("S" + strconv.Itoa(config.FideConf.ShardAmount) + "N" + strconv.Itoa(len(idChain.IDC.NodeMap)))
-	Interfaces.Communications[Interfaces.SyncFideBlock].Request()
+	//Interfaces.Communications[Interfaces.SyncFideBlock].Request()
 	time.Sleep(config.ExitDelay)
+	config.STOPPER <- true
 	return
 }
 
@@ -438,16 +326,23 @@ func NewFideChain(shard *Shard) *MonosulfideChain {
 		TopBlockHash: make(map[int]crypt.Hash),
 		blockBuffer:  make(map[int]map[crypt.Hash]*Block.FideBlock),
 		//blockAck:     make(map[int]map[crypt.Hash]int),
-		exp: new(Record).Refresh(),
+		BlockGs: make([]Block.Block, config.ShardAmount),
+		Weight:  make(map[crypt.Hash]int),
+		Path:    make(map[crypt.Hash][]crypt.Hash),
+		refs:    make(map[crypt.Hash][]crypt.Hash),
+		Accept:  make(map[int]bool),
+		updataT: make(map[crypt.Hash]time.Time),
+		exp:     new(Record).Refresh(),
 	}
-
+	for i := 0; i < config.FideConf.ShardAmount; i++ {
+		ret.Accept[i] = true
+	}
 	baseBlock := &Block.FideBlock{
 		H: &Block.FideHead{
 			Nonce:      0,
 			ParentHash: idChain.IDC.Chain.TopBlockHash[0],
 		},
 		B: &Block.FideBody{
-			Intra:     nil,
 			SubBlocks: make([]*Block.SubBlock, 0),
 		},
 	}
@@ -460,12 +355,108 @@ func NewFideChain(shard *Shard) *MonosulfideChain {
 		ret.blockBuffer[i] = make(map[crypt.Hash]*Block.FideBlock)
 		ret.TopBlockHash[i] = baseBlock.Hash()
 		ret.blockBuffer[i][baseBlock.Hash()] = baseBlock
+		ret.BlockGs[i] = baseBlock
+		ret.Blocks[baseBlock.Hash()] = baseBlock
 	}
 	ret.TxPool = Tx.NewTxPool(shard.sid)
 	ret.EnableStorage(idChain.RunningNode.Port())
 	return ret
 }
 
-func (mc *MonosulfideChain) EnableStorage(port string) {
-	mc.storage = storage.NewStorage(port, uint64(mc.Id()))
+func (ch *MonosulfideChain) EnableStorage(port string) {
+	ch.storage = storage.NewStorage(port, uint64(ch.Id()))
+}
+
+func (ch *MonosulfideChain) FindBestBranches() {
+	log.Printf("FindBestBranches")
+	Bs := map[crypt.Hash]Block.Block{}
+	refCnt := make(map[crypt.Hash]int)
+	for k, b := range ch.Blocks {
+		Bs[k] = b
+		refCnt[k] = config.FideConf.ShardAmount
+	}
+	top := make([]crypt.Hash, config.FideConf.ShardAmount)
+	for i := 0; i < config.FideConf.ShardAmount; i++ {
+		top[i] = ch.BlockGs[i].Hash()
+	}
+	seq := make([]crypt.Hash, 0)
+	LockMap := make(map[crypt.Hash]bool)
+	Removeable := make(map[crypt.Hash]Block.Block)
+	for _, b := range ch.BlockGs {
+		Removeable[b.Hash()] = b
+	}
+	for len(Removeable) != 0 {
+		removed := false
+		for _, b := range Removeable {
+			if LockMap[b.Hash()] == false {
+				removed = true
+				delete(Bs, b.Hash())
+				decs := ch.Path[b.Hash()]
+				if len(decs) > 1 {
+					for _, dec := range decs {
+						LockMap[dec] = true
+					}
+				}
+				for _, c := range ch.refs[b.Hash()] {
+					refCnt[c]--
+					if refCnt[c] == 0 {
+						Removeable[c] = Bs[c]
+					}
+				}
+				top[b.Head().(*Block.FideHead).ShardIdx] = b.Hash()
+				seq = append(seq, b.Hash())
+				delete(Removeable, b.Hash())
+			}
+		}
+		if !removed {
+			best := crypt.Hash{}
+			maxW := 0
+			lastT := time.Now()
+			for _, b := range Removeable {
+				w := ch.Weight[b.Hash()]
+				if w > maxW {
+					maxW = w
+					best = b.Hash()
+					lastT = ch.updataT[b.Hash()]
+				} else if w == maxW {
+					if ch.updataT[b.Hash()].Before(lastT) {
+						best = b.Hash()
+						lastT = ch.updataT[b.Hash()]
+					}
+				}
+			}
+			sid := ch.Blocks[best].Head().(*Block.FideHead).ShardIdx
+			for _, b := range Removeable {
+				if b.Head().(*Block.FideHead).ShardIdx == sid && b.Hash() != best {
+					delete(Removeable, b.Hash())
+					delete(LockMap, b.Hash())
+				}
+			}
+			delete(LockMap, best)
+		}
+	}
+	newCnt, oldCnt := 0, 0
+	for i := 0; i < config.FideConf.ShardAmount; i++ {
+		if ch.TopBlockHash[i] != top[i] {
+			log.Printf("%v, %v", ch.TopBlockHash[i], ch.Blocks[ch.TopBlockHash[i]] == nil)
+			oldAnc := ch.Anc(ch.TopBlockHash[i])
+			newAnc := ch.Anc(top[i])
+			for k, oldB := range oldAnc {
+				if newAnc[k] == nil {
+					for _, tx := range oldB.Body().Txs() {
+						ch.TxPool.Append(tx)
+					}
+					oldCnt++
+				}
+			}
+			for k, newB := range newAnc {
+				if oldAnc[k] == nil {
+					ch.TxPool.RemoveTxs(newB.Body().Txs())
+					newCnt++
+				}
+			}
+		}
+		log.Printf("Rollback %v blocks, new path got %v blocks", oldCnt, newCnt)
+		ch.TopBlockHash[i] = top[i]
+	}
 }

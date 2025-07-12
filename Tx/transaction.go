@@ -16,6 +16,7 @@ var (
 	RegisterTx = 0
 	PryTx      = 1
 	RelayTx    = 2
+	RelayDump  = 3
 )
 
 type Transaction struct {

@@ -4,6 +4,7 @@ import (
 	"blockEmulator/Block"
 	"blockEmulator/Interfaces"
 	"blockEmulator/Proposals"
+	"blockEmulator/Tx"
 	"blockEmulator/config"
 	"blockEmulator/consensus_shard/pow"
 	"blockEmulator/message"
@@ -92,18 +93,44 @@ func (op *RelayTxOpt) Execute() {
 		for _, b := range shard.Chain.Blocks {
 			space += len(b.Encode())
 		}
+		smallCnt := 0
 		cnt := 0
+		CTx := 0
+		ITx := 0
+		SumITx := time.Duration(0)
+		SumCTx := time.Duration(0)
 		for sid := range config.MonoxideConf.ShardAmount {
 			topH := shard.Chain.TopBlockHash[sid]
 			tempBlock := shard.Chain.Blocks[topH]
 			for tempBlock != shard.Chain.BlockGs[sid] {
+				if float64(len(tempBlock.Body().Txs())) <= (config.MaxBlockSize * 0.1) {
+					smallCnt++
+				}
 				cnt++
 				tempBlock = shard.Chain.Blocks[tempBlock.(*Block.RelayBlock).H.ParentHash]
+				for _, tx := range tempBlock.Body().Txs() {
+					if tx.SInShard() == tx.RInShard() {
+						ITx++
+						SumITx += tempBlock.Head().Time().Sub(tx.Time)
+					} else if tx.Type == Tx.RelayDump {
+						CTx++
+						SumCTx += tempBlock.Head().Time().Sub(tx.Time)
+					}
+				}
 			}
 			cnt++
 		}
 		log.Printf("SPACE(%v blocks)(%v in pivot) :: %v\n", len(shard.Chain.Blocks), cnt, space)
 		log.Printf("TIME :: %v", time.Since(op.con.(*pow.EasyPoW).StartTime))
+		log.Printf("Under 10per rate: %v", smallCnt)
+		log.Printf("ITx: %v", ITx)
+		log.Printf("CTx: %v", CTx)
+		log.Printf("TCL Intra: %v", (SumITx / time.Duration(ITx)).Milliseconds())
+		log.Printf("TCL Cross: %v", (SumCTx / time.Duration(CTx)).Milliseconds())
+		log.Printf("TPS: %v", time.Duration(ITx+CTx)/time.Since(config.TxBegin))
+		log.Printf("Inject: %v", config.InjectSpeed)
+		log.Printf("Transaction per second: %v", config.MaxBlockSize/float64((config.PoWExpTime).Milliseconds())*float64(config.ShardAmount))
+
 		config.STOPPER <- true
 	}
 	op.tempBlocks = make([]Block.Block, 0)

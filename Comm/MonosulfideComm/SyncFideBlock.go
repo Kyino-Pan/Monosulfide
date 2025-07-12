@@ -39,7 +39,6 @@ func (com *SyncFideBlockComm) Request(...*[]byte) bool {
 		tempBlock := &Block.FideBlock{
 			H: block.H,
 			B: &Block.FideBody{
-				Intra:     nil,
 				SubBlocks: make([]*Block.SubBlock, config.FideConf.ShardAmount),
 			},
 		}

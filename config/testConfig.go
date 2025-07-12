@@ -14,10 +14,12 @@ var (
 )
 
 const (
-	TxInjectInterval = 0 * time.Millisecond
-	InjectSpeed      = 2048    // 每秒交易注入速率 (transactions per second)
-	TotalDataSize    = 1000000 // the total number of txs
-	PoWExpTime       = 3 * time.Second
+	TxInjectInterval = 50 * time.Millisecond
+	InjectSpeed      = 8196 // per second
+
+	// 每秒交易注入速率 (transactions per second)
+	TotalDataSize = 100000 // the total number of txs
+	PoWExpTime    = 3000 * time.Millisecond
 
 	MaxBlockSize = 2048
 	BatchSize    = 16000 // supervisor read a batch of txs then send them, it should be larger than inject speed

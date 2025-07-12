@@ -82,6 +82,7 @@ func (ch *Chain) Append(block *Block.RelayBlock) {
 		if block.H.ParentHash == ch.TopBlockHash[int(sid)] {
 			ch.TopBlockHash[int(sid)] = block.Hash()
 			ch.TxPool.RemoveTxs(block.B.Intra)
+			ch.TxPool.AppendRelay(block.B.Intra)
 		} else {
 			top, fork := ch.findTop(sid)
 			if fork != nil {
