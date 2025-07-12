@@ -18,7 +18,7 @@ const (
 	InjectSpeed      = 2000 // per second
 
 	// 每秒交易注入速率 (transactions per second)
-	TotalDataSize = 100000 // the total number of txs
+	TotalDataSize = 10000 // the total number of txs
 	PoWExpTime    = 3000 * time.Millisecond
 
 	MaxBlockSize = 2048

@@ -284,9 +284,15 @@ func (pool *Pool) FindBest() int {
 func (pool *Pool) AppendRelay(intra []*Transaction) {
 	for _, tx := range intra {
 		if tx.Type != RelayDump && tx.SInShard() != tx.RInShard() {
-			ntx := new(Transaction)
-			*ntx = *tx
-			ntx.Type = RelayDump
+			ntx := &Transaction{
+				Sender:    tx.Sender,
+				Recipient: tx.Recipient,
+				Value:     tx.Value,
+				Nonce:     tx.Nonce,
+				Type:      RelayDump,
+				Interface: tx.Interface,
+				Time:      tx.Time,
+			}
 			pool.Append(ntx)
 		}
 	}

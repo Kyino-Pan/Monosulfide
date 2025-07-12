@@ -98,6 +98,7 @@ func (op *RelayTxOpt) Execute() {
 		cnt := 0
 		CTx := 0
 		ITx := 0
+		check := 0
 		SumITx := time.Duration(0)
 		SumCTx := time.Duration(0)
 		for sid := range config.MonoxideConf.ShardAmount {
@@ -116,6 +117,8 @@ func (op *RelayTxOpt) Execute() {
 					} else if tx.Type == Tx.RelayDump {
 						CTx++
 						SumCTx += tempBlock.Head().Time().Sub(tx.Time)
+					} else {
+						check++
 					}
 				}
 			}
@@ -132,6 +135,7 @@ func (op *RelayTxOpt) Execute() {
 			log.Printf("TPS: %v", float64(ITx+CTx)/float64(time.Since(config.TxBegin).Milliseconds()))
 			log.Printf("Inject: %v", config.InjectSpeed)
 			log.Printf("Transaction per millisec: %v", config.MaxBlockSize/float64((config.PoWExpTime).Milliseconds())*float64(config.ShardAmount))
+			log.Printf("Check: %v", check)
 		}
 		config.STOPPER <- true
 	}

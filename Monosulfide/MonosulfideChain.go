@@ -102,7 +102,7 @@ func (ch *MonosulfideChain) GenerateBlock() Block.Block {
 		// 打包完所有的数据了
 		ret.H.StateRoot = []byte("FINISH")
 	}
-	log.Printf("%v", ret.Hash())
+	//log.Printf("%v", ret.Hash())
 	return ret
 }
 
@@ -257,9 +257,12 @@ func (ch *MonosulfideChain) Save() {
 	sumC := time.Duration(0)
 	cnt := 0
 	bCnt := 0
+	smallCnt := 0
+	space := uint64(0)
 	for i := 0; i < config.FideConf.ShardAmount; i++ {
 		ancs := ch.Anc(ch.TopBlockHash[i])
 		for _, anc := range ancs {
+			space += uint64(len(anc.Encode()))
 			bCnt++
 			if anc == ch.BlockGs[i] {
 				continue
@@ -270,6 +273,9 @@ func (ch *MonosulfideChain) Save() {
 				ITx = len(sub.CBody.Txs)
 			}
 			cnt += len(anc.Body().Txs())
+			if float64(cnt) <= (config.MaxBlockSize * 0.1) {
+				smallCnt++
+			}
 			CTx := len(anc.Body().Txs()) - ITx
 			numI += ITx
 			numC += CTx
@@ -299,6 +305,9 @@ func (ch *MonosulfideChain) Save() {
 	log.Printf("CrossTCL = %v", (sumC / time.Duration(numC+1)).Milliseconds())
 	log.Printf("TPS: %v ", TPS)
 	log.Printf("Pivot: (%v/%v)", bCnt, len(ch.Blocks))
+	log.Printf("Space : %v", space)
+	log.Printf("Small: %v")
+	log.Printf("Time : %v", time.Now().Sub(config.TxBegin))
 	writer.Writef(strconv.Itoa(numI))
 	writer.Writef(strconv.Itoa(numC))
 	writer.Writef(strconv.Itoa(ch.exp.GenAmount))
