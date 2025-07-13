@@ -71,12 +71,13 @@ func Selector() {
 					success = true
 					if begin == false {
 						begin = true
-						Opts.CrossBegin()
+						//Opts.CrossBegin()
 					}
 				} else if msgType == message.TxEOF {
 					config.ManagerFinished = true
 					fmt.Println("_________TX-FINISH_________")
 					Interfaces.LocalShard.GetTxPool().Print()
+					Opts.CrossBegin()
 					success = true
 				} else {
 					success = Con.HandleMsg(msg)
