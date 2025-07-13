@@ -28,8 +28,9 @@ const (
 	TpsTest = false
 )
 
-var MaxBlockSize = 2048
+var MaxBlockSize = 4196
 
-// var InjectSpeed = float64(MaxBlockSize) / float64(PoWExpTime/time.Second) * 0.9 // per second
-var InjectSpeed = 10000
+var phi = 0.85
+var InjectSpeed = float64(MaxBlockSize) / float64(PoWExpTime/time.Second) * phi // per second
+// var InjectSpeed = 10000
 var PoWExpTime = 3000 * time.Millisecond
