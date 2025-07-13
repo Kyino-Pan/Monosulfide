@@ -105,11 +105,10 @@ func (op *RelayTxOpt) Execute() {
 			topH := shard.Chain.TopBlockHash[sid]
 			tempBlock := shard.Chain.Blocks[topH]
 			for tempBlock != shard.Chain.BlockGs[sid] {
+				cnt++
 				if float64(len(tempBlock.Body().Txs())) <= float64(config.MaxBlockSize)*0.1 {
 					smallCnt++
 				}
-				cnt++
-				tempBlock = shard.Chain.Blocks[tempBlock.(*Block.RelayBlock).H.ParentHash]
 				for _, tx := range tempBlock.Body().Txs() {
 					if tx.SInShard() == tx.RInShard() {
 						ITx++
@@ -121,6 +120,7 @@ func (op *RelayTxOpt) Execute() {
 						check++
 					}
 				}
+				tempBlock = shard.Chain.Blocks[tempBlock.(*Block.RelayBlock).H.ParentHash]
 			}
 			cnt++
 		}
@@ -128,7 +128,7 @@ func (op *RelayTxOpt) Execute() {
 			log.Printf("MONOXIDE REPORT")
 			log.Printf("SPACE(%v blocks)(%v in pivot) :: %v\n", len(shard.Chain.Blocks), cnt, space)
 			log.Printf("TIME :: %v", time.Since(op.con.(*pow.EasyPoW).StartTime))
-			log.Printf("Under 10per rate: %v", smallCnt)
+			log.Printf("Under 10per cnt: %v", smallCnt)
 			log.Printf("ITx: %v", ITx)
 			log.Printf("CTx: %v", CTx)
 			log.Printf("TCL Intra: %v", (SumITx / time.Duration(ITx)).Milliseconds())
