@@ -2,6 +2,7 @@ package Comm
 
 import (
 	"blockEmulator/Interfaces"
+	"blockEmulator/Monosulfide"
 	"blockEmulator/config"
 	"blockEmulator/message"
 	"blockEmulator/pyramid"
@@ -51,15 +52,15 @@ func (com *MainBeginCom) HandleRequest(*message.Message) bool {
 			}
 		case config.UniRelay:
 			Interfaces.Con[config.FideMod].Enable()
+			if config.FideConf.StorageOptimize == true {
+				Monosulfide.LocalShard.GetTxPool().ResetControl()
+			}
 			go Interfaces.Con[config.FideMod].Tic()
 			//go Interfaces.Operations[message.FideTx].Schedule()
 			config.CalcComm = true
 		case config.ClassicRelay:
 			Interfaces.Con[config.RelayMod].Enable()
 			go Interfaces.Con[config.RelayMod].Tic()
-			//if Interfaces.LocalShard.Main() == idChain.RunningNode {
-			//	go Interfaces.Operations[message.RelayTx].Schedule()
-			//}
 		}
 		config.TxBegin = time.Now()
 	}

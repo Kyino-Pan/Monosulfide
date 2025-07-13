@@ -71,12 +71,13 @@ func Selector() {
 					success = true
 					if begin == false {
 						begin = true
-						Opts.CrossBegin()
+						//Opts.CrossBegin()
 					}
 				} else if msgType == message.TxEOF {
 					config.ManagerFinished = true
 					fmt.Println("_________TX-FINISH_________")
 					Interfaces.LocalShard.GetTxPool().Print()
+					Opts.CrossBegin()
 					success = true
 				} else {
 					success = Con.HandleMsg(msg)
@@ -101,10 +102,9 @@ func Init() {
 	}
 	Interfaces.Con[config.PyrMod] = pbft.NewPyramidCon()
 	//Interfaces.Con[config.FideMod] = pbft.NewMonosulfideCon()
-	if config.FideConf.Enable {
-		Interfaces.Con[config.FideMod] = pow.NewFideCon()
-	}
-	if config.MonoxideConf.Enable {
-		Interfaces.Con[config.RelayMod] = pow.NewRelayCon()
-	}
+	//if config.FideConf.Enable {
+	Interfaces.Con[config.FideMod] = pow.NewFideCon()
+
+	Interfaces.Con[config.RelayMod] = pow.NewRelayCon()
+
 }
