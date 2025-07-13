@@ -68,8 +68,8 @@ func (ch *MonosulfideChain) GenerateBlock() Block.Block {
 	blockBody := &Block.FideBody{
 		SubBlocks: make([]*Block.SubBlock, config.FideConf.ShardAmount),
 	}
-	txsArray, blockIdx, sum := ch.TxPool.PackageRelayTxs()
-	if sum == 0 {
+	txsArray, blockIdx := ch.TxPool.PackageRelayTxs()
+	if ch.TxPool.Amount() == 0 {
 		ch.Save()
 		return nil
 	}
@@ -273,7 +273,7 @@ func (ch *MonosulfideChain) Save() {
 				ITx = len(sub.CBody.Txs)
 			}
 			cnt += len(anc.Body().Txs())
-			if float64(cnt) <= float64(config.MaxBlockSize)*0.1 {
+			if float64(len(anc.Body().Txs())) <= float64(config.MaxBlockSize)*0.1 {
 				smallCnt++
 			}
 			CTx := len(anc.Body().Txs()) - ITx

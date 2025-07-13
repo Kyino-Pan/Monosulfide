@@ -29,7 +29,6 @@ type EasyPoW struct {
 
 func NewRelayCon() Interfaces.Consensus {
 	ret := NewEasyPoWConsensus(message.RelayTx)
-	config.MaxBlockSize /= config.ShardAmount
 	return ret
 }
 func NewFideCon() Interfaces.Consensus {

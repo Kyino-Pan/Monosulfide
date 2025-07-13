@@ -5,12 +5,14 @@ var (
 )
 
 const ClassRelay = false
+const StorageOptimize = true
 
 func InitFideConfig() *FideConfig {
 	ret := new(FideConfig)
 	if CrossShardConsensus == UniRelay {
 		ret.Enable = true
 	}
+	ret.StorageOptimize = StorageOptimize
 	return ret.UpdateShardAmount(ShardAmount)
 }
 
@@ -21,7 +23,8 @@ func (conf *FideConfig) UpdateShardAmount(num int) *FideConfig {
 }
 
 type FideConfig struct {
-	Enable      bool
-	ShardAmount int
-	Threshold   int
+	Enable          bool
+	ShardAmount     int
+	Threshold       int
+	StorageOptimize bool
 }

@@ -101,10 +101,9 @@ func Init() {
 	}
 	Interfaces.Con[config.PyrMod] = pbft.NewPyramidCon()
 	//Interfaces.Con[config.FideMod] = pbft.NewMonosulfideCon()
-	if config.FideConf.Enable {
-		Interfaces.Con[config.FideMod] = pow.NewFideCon()
-	}
-	if config.MonoxideConf.Enable {
-		Interfaces.Con[config.RelayMod] = pow.NewRelayCon()
-	}
+	//if config.FideConf.Enable {
+	Interfaces.Con[config.FideMod] = pow.NewFideCon()
+
+	Interfaces.Con[config.RelayMod] = pow.NewRelayCon()
+
 }

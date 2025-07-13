@@ -2,6 +2,8 @@ package Tx
 
 import (
 	"blockEmulator/config"
+	"bytes"
+	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -83,7 +85,7 @@ func (pool *Pool) PackageInnerTxs() []*Transaction {
 	return transactions
 }
 
-func (pool *Pool) PackageRelayTxs() ([][]*Transaction, int, int) {
+func (pool *Pool) PackageRelayTxs() ([][]*Transaction, int) {
 	pool.lock.RLock()
 	defer pool.lock.RUnlock()
 	var candidateGroups = make([][]*Transaction, config.FideConf.ShardAmount)
@@ -121,7 +123,7 @@ func (pool *Pool) PackageRelayTxs() ([][]*Transaction, int, int) {
 		round++
 	}
 	log.Printf("%v/%v (S%v) packaged", cnt, pool.Amount(), bestIndex)
-	return transactions, bestIndex, cnt
+	return transactions, bestIndex
 }
 
 func (pool *Pool) PackageCrossTxs() []*Transaction {
@@ -181,8 +183,8 @@ func (pool *Pool) PackageTxsFrom(sid int) []*Transaction {
 			transactions = append(transactions, tx)
 		}
 	}
-	if len(transactions) > config.MaxBlockSize {
-		transactions = transactions[:config.MaxBlockSize]
+	if len(transactions) > config.MaxBlockSize/config.MonoxideConf.ShardAmount {
+		transactions = transactions[:config.MaxBlockSize/config.MonoxideConf.ShardAmount]
 	}
 	return transactions
 }
@@ -261,6 +263,15 @@ func (pool *Pool) Print() {
 		}
 		fmt.Println()
 	}
+
+	var buff bytes.Buffer
+	enc := gob.NewEncoder(&buff)
+	err := enc.Encode(pool.TxLists)
+	if err != nil {
+		log.Panic(err)
+	}
+	log.Printf("%v", buff.Bytes())
+
 	fmt.Println("----------------")
 
 }
@@ -270,6 +281,11 @@ func (pool *Pool) FindBest() int {
 	ret := -1
 	for s, txLists := range pool.TxLists {
 		cnt := 0
+		if config.FideConf.Enable && config.FideConf.StorageOptimize == true {
+			if !pool.controls[s] {
+				continue
+			}
+		}
 		for _, txList := range txLists {
 			cnt += len(txList.txs)
 		}
@@ -295,6 +311,33 @@ func (pool *Pool) AppendRelay(intra []*Transaction) {
 			}
 			pool.Append(ntx)
 		}
+	}
+}
+
+func (pool *Pool) ResetControl() {
+	pool.controls = make([]bool, config.FideConf.ShardAmount)
+	if config.FideConf.Enable {
+		switch config.FideConf.ShardAmount {
+		case 8:
+			pool.controls[5] = true
+			//pool.controls[3]= true
+		case 16:
+			pool.controls[13] = true
+			pool.controls[11] = true
+			//pool.controls[12] = true
+			//pool.controls[0] = true
+		case 32:
+			pool.controls[29] = true
+			pool.controls[27] = true
+			pool.controls[28] = true
+			pool.controls[1] = true
+			//pool.controls[14] = true
+			//pool.controls[0] = true
+			//pool.controls[16] = true
+			//pool.controls[21] = true
+		}
+		pool.controls[pool.localIndex] = true
+		log.Printf("controls:%v", pool.controls)
 	}
 }
 
