@@ -106,7 +106,7 @@ func (op *RelayTxOpt) Execute() {
 			tempBlock := shard.Chain.Blocks[topH]
 			for tempBlock != shard.Chain.BlockGs[sid] {
 				cnt++
-				if float64(len(tempBlock.Body().Txs())) <= float64(config.MaxBlockSize)*0.1 {
+				if float64(len(tempBlock.Body().Txs())) <= float64(config.MaxBlockSize/config.ShardAmount)*0.1 {
 					smallCnt++
 				}
 				for _, tx := range tempBlock.Body().Txs() {

@@ -2,8 +2,6 @@ package Tx
 
 import (
 	"blockEmulator/config"
-	"bytes"
-	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -264,14 +262,6 @@ func (pool *Pool) Print() {
 		fmt.Println()
 	}
 
-	var buff bytes.Buffer
-	enc := gob.NewEncoder(&buff)
-	err := enc.Encode(pool.TxLists)
-	if err != nil {
-		log.Panic(err)
-	}
-	log.Printf("%v", buff.Bytes())
-
 	fmt.Println("----------------")
 
 }
@@ -323,7 +313,7 @@ func (pool *Pool) ResetControl() {
 			//pool.controls[3]= true
 		case 16:
 			pool.controls[13] = true
-			pool.controls[11] = true
+			//pool.controls[11] = true
 			//pool.controls[12] = true
 			//pool.controls[0] = true
 		case 32:

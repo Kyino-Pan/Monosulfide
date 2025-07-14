@@ -23,7 +23,7 @@ const (
 var TX_TEST = true
 
 const (
-	EpochTime = time.Duration(2999) * time.Second
+	EpochTime = time.Duration(9999) * time.Second
 	InitDelay = time.Duration(8) * time.Second
 
 	ExitDelay = time.Duration(8) * time.Second
